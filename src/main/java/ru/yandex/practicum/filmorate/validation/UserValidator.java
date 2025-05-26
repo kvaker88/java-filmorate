@@ -9,7 +9,9 @@ import java.time.LocalDate;
 @Slf4j
 public final class UserValidator {
 
-    private UserValidator() {}
+    private UserValidator() {
+
+    }
 
     public static void validate(User user) {
         log.info("Начинается валидация всех полей пользователя");

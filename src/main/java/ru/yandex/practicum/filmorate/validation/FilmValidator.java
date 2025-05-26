@@ -10,7 +10,9 @@ public final class FilmValidator {
     private static final LocalDate FIRST_FILM_DATE = LocalDate.of(1895, 12, 28);
     private static final int MAX_DESCRIPTION_LENGTH = 200;
 
-    private FilmValidator() {}
+    private FilmValidator() {
+
+    }
 
     public static void validate(Film film) {
         log.info("Начинается валидация фильма");
