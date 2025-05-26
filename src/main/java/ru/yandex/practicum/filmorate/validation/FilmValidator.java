@@ -41,7 +41,7 @@ public final class FilmValidator {
             throw new ValidationException("Дата релиза не может быть раньше " + FIRST_FILM_DATE);
         }
 
-        if (film.getDuration() == null || film.getDuration().isNegative() || film.getDuration().isZero()) {
+        if (film.getDuration() == null || film.getDuration() <= 0) {
             log.error("Ошибка при валидации фильма: Продолжительность должна быть положительным числом: {}",
                     film.getDuration());
             throw new ValidationException("Продолжительность должна быть положительным числом");

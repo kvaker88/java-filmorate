@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -25,7 +24,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
+    public Film createFilm(@RequestBody Film film) {
         log.info("Попытка создания фильма: {}", film);
 
         FilmValidator.validate(film);
@@ -54,22 +53,10 @@ public class FilmController {
 
         FilmValidator.validate(film);
 
-        if (film.getName() != null) {
-            existingFilm.setName(film.getName());
-            log.info("Имя фильма изменено: {}", film.getName());
-        }
-        if (film.getDescription() != null) {
-            existingFilm.setDescription(film.getDescription());
-            log.info("Описание фильма изменено: {}", film.getDescription());
-        }
-        if (film.getReleaseDate() != null) {
-            existingFilm.setReleaseDate(film.getReleaseDate());
-            log.info("Дата релиза фильма изменено: {}", film.getReleaseDate());
-        }
-        if (film.getDuration() != null) {
-            existingFilm.setDuration(film.getDuration());
-            log.info("Продолжительность фильма изменена: {}", film.getDuration());
-        }
+        existingFilm.setName(film.getName());
+        existingFilm.setDescription(film.getDescription());
+        existingFilm.setReleaseDate(film.getReleaseDate());
+        existingFilm.setDuration(film.getDuration());
 
         log.info("Фильм с ID: {} успешно обновлен", film.getId());
         return existingFilm;

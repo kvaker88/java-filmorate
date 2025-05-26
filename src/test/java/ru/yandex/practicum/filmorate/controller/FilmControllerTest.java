@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +22,7 @@ class FilmControllerTest {
                 "Валидный Фильм",
                 "Валидное Описание",
                 LocalDate.of(2000, 1, 1),
-                Duration.ofMinutes(120)
+                120L
         );
     }
 
@@ -43,7 +42,7 @@ class FilmControllerTest {
                 "",
                 "Описание",
                 LocalDate.now(),
-                Duration.ofMinutes(120)
+                120L
         );
 
         ValidationException exception = assertThrows(ValidationException.class,
@@ -59,7 +58,7 @@ class FilmControllerTest {
                 "Фильм",
                 longDescription,
                 LocalDate.now(),
-                Duration.ofMinutes(120)
+                120L
         );
 
         ValidationException exception = assertThrows(ValidationException.class,
@@ -74,7 +73,7 @@ class FilmControllerTest {
                 "Фильм",
                 "Описание",
                 LocalDate.of(1895, 12, 27),
-                Duration.ofMinutes(120)
+                120L
         );
 
         ValidationException exception = assertThrows(ValidationException.class,
@@ -89,7 +88,7 @@ class FilmControllerTest {
                 "Фильм",
                 "Описание",
                 LocalDate.now(),
-                Duration.ofMinutes(-1)
+                -1L
         );
 
         ValidationException exception = assertThrows(ValidationException.class,
@@ -104,7 +103,7 @@ class FilmControllerTest {
                 "Фильм",
                 "Описание",
                 LocalDate.now(),
-                Duration.ofMinutes(120)
+                120L
         );
 
         assertThrows(NotFoundException.class, () -> filmController.updateFilm(film));
@@ -118,14 +117,14 @@ class FilmControllerTest {
                 "Новый Фильм",
                 "Новое Описание",
                 LocalDate.of(2001, 1, 1),
-                Duration.ofMinutes(90)
+                90L
         );
 
         Film updatedFilm = filmController.updateFilm(updateData);
 
         assertEquals("Новый Фильм", updatedFilm.getName());
         assertEquals("Новое Описание", updatedFilm.getDescription());
-        assertEquals(Duration.ofMinutes(90), updatedFilm.getDuration());
+        assertEquals(90L, updatedFilm.getDuration());
     }
 
     @Test
@@ -136,7 +135,7 @@ class FilmControllerTest {
                 "Другой Фильм",
                 "Другое Описание",
                 LocalDate.now(),
-                Duration.ofMinutes(90)
+                90L
         );
 
         filmController.createFilm(anotherFilm);

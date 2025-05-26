@@ -50,20 +50,12 @@ public class UserController {
             throw new NotFoundException(String.format("Пользователь с ID = %d не найден", newUser.getId()));
         }
 
-        if (newUser.getEmail() != null) {
-            oldUser.setEmail(newUser.getEmail().trim());
-        }
-        if (newUser.getLogin() != null) {
-            oldUser.setLogin(newUser.getLogin());
-        }
-        if (newUser.getName() != null) {
-            oldUser.setName(newUser.getName().isBlank() ? oldUser.getLogin() : newUser.getName());
-        }
-        if (newUser.getBirthday() != null) {
-            oldUser.setBirthday(newUser.getBirthday());
-        }
-
         UserValidator.validate(oldUser);
+        oldUser.setEmail(newUser.getEmail().trim());
+        oldUser.setLogin(newUser.getLogin());
+        oldUser.setBirthday(newUser.getBirthday());
+        oldUser.setName(newUser.getName());
+        UserValidator.validateName(oldUser);
 
         log.info("Пользователь с ID: {} успешно обновлен", newUser.getId());
         return oldUser;

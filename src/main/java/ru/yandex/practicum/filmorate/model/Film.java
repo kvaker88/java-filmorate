@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Data
@@ -16,5 +15,5 @@ public class Film {
     private LocalDate releaseDate;
 
     @JsonFormat(shape = JsonFormat.Shape.NUMBER)
-    private Duration duration;
+    private Long duration;
 }
