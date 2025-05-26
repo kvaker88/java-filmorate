@@ -38,27 +38,22 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User newUser) {
-        log.info("Попытка обновления пользователя: {}", newUser);
+    public User updateUser(@RequestBody User user) {
+        log.info("Попытка обновления пользователя: {}", user);
 
-        if (newUser.getId() == null) {
+        if (user.getId() == null) {
+            log.error("Ошибка при обновлении пользователя: ID должен быть указан");
             throw new ValidationException("ID должен быть указан");
         }
 
-        User oldUser = users.get(newUser.getId());
-        if (oldUser == null) {
-            throw new NotFoundException(String.format("Пользователь с ID = %d не найден", newUser.getId()));
+        if (!users.containsKey(user.getId())) {
+            log.error((String.format("Фильм с ID = %d не найден", user.getId())));
+            throw new NotFoundException(String.format("Фильм с ID = %d не найден", user.getId()));
         }
-
-        UserValidator.validate(oldUser);
-        oldUser.setEmail(newUser.getEmail().trim());
-        oldUser.setLogin(newUser.getLogin());
-        oldUser.setBirthday(newUser.getBirthday());
-        oldUser.setName(newUser.getName());
-        UserValidator.validateName(oldUser);
-
-        log.info("Пользователь с ID: {} успешно обновлен", newUser.getId());
-        return oldUser;
+        UserValidator.validate(user);
+        users.put(user.getId(), user);
+        log.info("Фильм с ID: {} успешно обновлен", user.getId());
+        return user;
     }
 
     private long getNextId() {

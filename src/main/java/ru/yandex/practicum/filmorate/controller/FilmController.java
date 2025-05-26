@@ -45,21 +45,14 @@ public class FilmController {
             throw new ValidationException("ID должен быть указан");
         }
 
-        Film existingFilm = films.get(film.getId());
-        if (existingFilm == null) {
+        if (!films.containsKey(film.getId())) {
             log.error((String.format("Фильм с ID = %d не найден", film.getId())));
             throw new NotFoundException(String.format("Фильм с ID = %d не найден", film.getId()));
         }
-
         FilmValidator.validate(film);
-
-        existingFilm.setName(film.getName());
-        existingFilm.setDescription(film.getDescription());
-        existingFilm.setReleaseDate(film.getReleaseDate());
-        existingFilm.setDuration(film.getDuration());
-
+        films.put(film.getId(), film);
         log.info("Фильм с ID: {} успешно обновлен", film.getId());
-        return existingFilm;
+        return film;
     }
 
     private long getNextId() {
