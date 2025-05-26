@@ -1,12 +1,20 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-/**
- * Film.
- */
-@Getter
-@Setter
+import java.time.Duration;
+import java.time.LocalDate;
+
+@Data
+@AllArgsConstructor
 public class Film {
+    private Long id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    private Duration duration;
 }
