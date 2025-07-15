@@ -9,7 +9,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.dto.FriendshipResponse;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -108,11 +107,10 @@ class UserControllerTest {
     @Test
     @DisplayName("Добавление друга с валидными ID → возвращает ответ о дружбе")
     void addFriend_withValidIds_shouldReturnFriendshipResponse() {
-        FriendshipResponse response = userController.addFriend(validUser1.getId(), validUser2.getId()).getBody();
+        User response = userController.addFriend(validUser1.getId(), validUser2.getId()).getBody();
 
         assertNotNull(response);
-        assertEquals(validUser1.getId(), response.getUserId());
-        assertEquals(validUser2.getId(), response.getFriendId());
+        assertEquals(validUser1.getId(), response.getId());
     }
 
     @Test
@@ -131,7 +129,7 @@ class UserControllerTest {
     void deleteFriend_shouldRemoveFriendship() {
         userController.addFriend(validUser1.getId(), validUser2.getId());
 
-        FriendshipResponse response = userController.deleteFriend(validUser1.getId(), validUser2.getId()).getBody();
+        User response = userController.deleteFriend(validUser1.getId(), validUser2.getId()).getBody();
 
         assertNotNull(response);
         Collection<User> friends = userController.getFriendsByUserId(validUser1.getId());

@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FilmLikesResponse;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -25,7 +24,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<FilmLikesResponse> getPopularFilms(
+    public Collection<Film> getPopularFilms(
             @RequestParam(defaultValue = "10") int count) {
         return filmService.getPopularFilms(count);
     }

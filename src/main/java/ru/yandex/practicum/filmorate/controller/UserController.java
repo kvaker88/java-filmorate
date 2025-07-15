@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FriendshipResponse;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -51,20 +50,20 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public ResponseEntity<FriendshipResponse> addFriend(
+    public ResponseEntity<User> addFriend(
             @PathVariable Long userId,
             @PathVariable Long friendId
     ) {
-        FriendshipResponse response = userService.addFriend(userId, friendId);
+        User response = userService.addFriend(userId, friendId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public ResponseEntity<FriendshipResponse> deleteFriend(
+    public ResponseEntity<User> deleteFriend(
             @PathVariable Long userId,
             @PathVariable Long friendId
     ) {
-        FriendshipResponse response = userService.deleteFriend(userId, friendId);
+        User response = userService.deleteFriend(userId, friendId);
         return ResponseEntity.ok(response);
     }
 }

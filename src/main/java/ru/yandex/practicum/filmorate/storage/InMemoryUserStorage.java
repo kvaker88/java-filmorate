@@ -29,6 +29,12 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addUser(User user) {
+        user.setId(getNextId());
+        users.put(user.getId(), user);
+    }
+
+    @Override
+    public void updateUser(User user) {
         users.put(user.getId(), user);
     }
 
@@ -37,8 +43,7 @@ public class InMemoryUserStorage implements UserStorage {
         return !users.containsKey(id);
     }
 
-    @Override
-    public long getNextId() {
+    private long getNextId() {
         long currentMaxId = users.keySet()
                 .stream()
                 .mapToLong(id -> id)

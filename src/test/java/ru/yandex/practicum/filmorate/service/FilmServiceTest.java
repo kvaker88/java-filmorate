@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.dto.FilmLikesResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -229,7 +228,7 @@ class FilmServiceTest {
     @Test
     @DisplayName("Получение популярных фильмов из пустого хранилища → возвращает пустой список")
     void getPopularFilms_withEmptyStorage_shouldReturnEmptyList() {
-        Collection<FilmLikesResponse> result = filmService.getPopularFilms(10);
+        Collection<Film> result = filmService.getPopularFilms(10);
 
         assertTrue(result.isEmpty());
     }
@@ -261,7 +260,7 @@ class FilmServiceTest {
         filmService.createFilm(film1);
         filmService.createFilm(film2);
 
-        List<FilmLikesResponse> result = new ArrayList<>(filmService.getPopularFilms(2));
+        List<Film> result = new ArrayList<>(filmService.getPopularFilms(2));
 
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId());

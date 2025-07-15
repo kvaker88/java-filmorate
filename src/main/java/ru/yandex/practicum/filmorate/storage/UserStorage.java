@@ -13,7 +13,7 @@ public interface UserStorage {
 
     void addUser(User user);
 
-    boolean doesUserNotExist(Long id);
+    void updateUser(User user);
 
-    long getNextId();
+    boolean doesUserNotExist(Long id);
 }

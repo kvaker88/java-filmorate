@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.dto.FilmLikesResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -150,7 +149,7 @@ class FilmControllerTest {
         filmController.likeTheFilm(film2.getId(), user2.getId());
         filmController.likeTheFilm(validFilm.getId(), validUser.getId());
 
-        Collection<FilmLikesResponse> popularFilms = filmController.getPopularFilms(2);
+        Collection<Film> popularFilms = filmController.getPopularFilms(2);
 
         assertEquals(2, popularFilms.size());
         assertEquals(film2.getId(), popularFilms.iterator().next().getId());

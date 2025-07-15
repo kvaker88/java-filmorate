@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dto.FilmLikesResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,7 +12,6 @@ import ru.yandex.practicum.filmorate.validation.FilmValidator;
 import ru.yandex.practicum.filmorate.validation.LikeValidator;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,8 +29,6 @@ public class FilmService {
     public Film createFilm(Film film) {
         log.info("Запрос создания фильма: {}", film);
         FilmValidator.validate(film);
-
-        film.setId(filmStorage.getNextId());
         filmStorage.addFilm(film);
 
         log.info("Фильм успешно создан. ID: {}, Название: {}", film.getId(), film.getName());
@@ -53,7 +49,7 @@ public class FilmService {
         }
 
         FilmValidator.validate(film);
-        filmStorage.addFilm(film);
+        filmStorage.updateFilm(film);
         log.info("Фильм с ID: {} успешно обновлен", film.getId());
         return film;
     }
@@ -91,16 +87,14 @@ public class FilmService {
         return film;
     }
 
-    public Collection<FilmLikesResponse> getPopularFilms(int count) {
-        log.info("Запрос на получение популярных фильмов");
+    public Collection<Film> getPopularFilms(int count) {
+        log.info("Запрос на получение {} популярных фильмов", count);
+
         return filmStorage.getAllFilms().stream()
-                .map(film -> new FilmLikesResponse(
-                        film.getId(),
-                        film.getName(),
-                        film.getLikes().size()
-                ))
-                .sorted(Comparator.comparingInt(FilmLikesResponse::getLikesCount).reversed())
-                .limit(Math.max(count, 1))
+                .sorted((f1, f2) ->
+                        Integer.compare(f2.getLikes().size(),
+                                f1.getLikes().size()))
+                .limit(count > 0 ? count : 10)
                 .collect(Collectors.toList());
     }
 }

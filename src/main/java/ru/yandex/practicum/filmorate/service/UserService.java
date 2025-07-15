@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.filmorate.dto.FriendshipResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -32,7 +31,6 @@ public class UserService {
         UserValidator.validate(user);
         UserValidator.validateName(user);
 
-        user.setId(userStorage.getNextId());
         userStorage.addUser(user);
 
         log.info("Пользователь успешно создан. ID: {}, Логин: {}", user.getId(), user.getLogin());
@@ -53,7 +51,8 @@ public class UserService {
         }
 
         UserValidator.validate(user);
-        userStorage.addUser(user);
+        userStorage.updateUser(user);
+
         log.info("Фильм с ID: {} успешно обновлен", user.getId());
         return user;
     }
@@ -67,16 +66,16 @@ public class UserService {
         return userStorage.getUserById(userId);
     }
 
-    public FriendshipResponse addFriend(Long userId, Long friendId) {
+    public User addFriend(Long userId, Long friendId) {
         FriendshipValidator.validate(userId, friendId, userStorage);
 
         userStorage.getUserById(userId).addFriend(friendId);
         userStorage.getUserById(friendId).addFriend(userId);
 
-        return new FriendshipResponse(userId, friendId, "ADDED");
+        return userStorage.getUserById(userId);
     }
 
-    public FriendshipResponse deleteFriend(Long userId, Long friendId) {
+    public User deleteFriend(Long userId, Long friendId) {
         FriendshipValidator.validate(userId, friendId, userStorage);
 
         User user = userStorage.getUserById(userId);
@@ -86,7 +85,7 @@ public class UserService {
         friend.deleteFriend(userId);
 
         log.info("Дружба между {} и {} успешно удалена", userId, friendId);
-        return new FriendshipResponse(userId, friendId, "DELETED");
+        return user;
     }
 
     public List<User> getFriendsByUserId(Long userId) {

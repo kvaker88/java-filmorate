@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.dto.FriendshipResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -201,9 +200,8 @@ class UserServiceTest {
                 LocalDate.now()
         ));
 
-        FriendshipResponse response = userService.addFriend(user1.getId(), user2.getId());
+        User response = userService.addFriend(user1.getId(), user2.getId());
 
-        assertEquals("ADDED", response.getStatus());
         assertTrue(userService.getFriendsByUserId(user1.getId()).contains(user2));
         assertTrue(userService.getFriendsByUserId(user2.getId()).contains(user1));
     }
@@ -221,9 +219,8 @@ class UserServiceTest {
         ));
 
         userService.addFriend(user1.getId(), user2.getId());
-        FriendshipResponse response = userService.deleteFriend(user1.getId(), user2.getId());
+        userService.deleteFriend(user1.getId(), user2.getId());
 
-        assertEquals("DELETED", response.getStatus());
         assertFalse(userService.getFriendsByUserId(user1.getId()).contains(user2));
         assertFalse(userService.getFriendsByUserId(user2.getId()).contains(user1));
     }

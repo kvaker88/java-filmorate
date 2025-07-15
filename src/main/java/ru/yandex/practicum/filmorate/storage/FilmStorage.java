@@ -13,7 +13,7 @@ public interface FilmStorage {
 
     void addFilm(Film film);
 
-    boolean doesFilmNotExist(Long id);
+    void updateFilm(Film film);
 
-    long getNextId();
+    boolean doesFilmNotExist(Long id);
 }
