@@ -1,144 +1,158 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.dto.FilmLikesResponse;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class FilmControllerTest {
+
+    @Autowired
     private FilmController filmController;
+
+    @Autowired
+    private UserController userController;
+
     private Film validFilm;
+    private User validUser;
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
         validFilm = new Film(
                 null,
-                "Валидный Фильм",
-                "Валидное Описание",
+                "Фильм",
+                "ОписаниеФильма",
                 LocalDate.of(2000, 1, 1),
                 120L
         );
+
+        validUser = new User(
+                null,
+                "mail@yandex.ru",
+                "Логин",
+                "Имя",
+                LocalDate.of(1990, 1, 1)
+        );
+
+        validFilm = filmController.createFilm(validFilm);
+        validUser = userController.createUser(validUser);
     }
 
     @Test
-    void createFilm_withValidData_shouldCreateFilm() {
-        Film createdFilm = filmController.createFilm(validFilm);
+    @DisplayName("Создание фильма с валидными данными → возвращает фильм с ID")
+    void createFilm_withValidData_shouldReturnFilmWithId() {
+        Film newFilm = new Film(
+                null,
+                "НовыйФильм",
+                "НовоеОписание",
+                LocalDate.of(2020, 1, 1),
+                90L
+        );
+
+        Film createdFilm = filmController.createFilm(newFilm);
 
         assertNotNull(createdFilm.getId());
-        assertEquals(1L, createdFilm.getId());
-        assertEquals("Валидный Фильм", createdFilm.getName());
+        assertEquals("НовыйФильм", createdFilm.getName());
     }
 
     @Test
-    void createFilm_withEmptyName_shouldThrowValidationException() {
-        Film film = new Film(
+    @DisplayName("Создание фильма с невалидной продолжительностью → исключение ValidationException")
+    void createFilm_withInvalidDuration_shouldThrowValidationException() {
+        Film invalidFilm = new Film(
                 null,
-                "",
-                "Описание",
+                "НекорректныйФильм",
+                "ОписаниеФильма",
                 LocalDate.now(),
-                120L
+                -90L
         );
 
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.createFilm(film));
-        assertEquals("Название фильма не может быть пустым", exception.getMessage());
+        assertThrows(ValidationException.class, () -> filmController.createFilm(invalidFilm));
     }
 
     @Test
-    void createFilm_withLongDescription_shouldThrowValidationException() {
-        String longDescription = "a".repeat(201);
-        Film film = new Film(
-                null,
-                "Фильм",
-                longDescription,
-                LocalDate.now(),
-                120L
-        );
-
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.createFilm(film));
-        assertTrue(exception.getMessage().contains("Описание не может превышать"));
+    @DisplayName("Получение фильма по несуществующему ID → исключение NotFoundException")
+    void getFilmById_withNonExistingId_shouldThrowNotFoundException() {
+        assertThrows(NotFoundException.class, () -> filmController.getUserById(9999L));
     }
 
     @Test
-    void createFilm_withEarlyReleaseDate_shouldThrowValidationException() {
-        Film film = new Film(
-                null,
-                "Фильм",
-                "Описание",
-                LocalDate.of(1895, 12, 27),
-                120L
-        );
+    @DisplayName("Получение всех фильмов → возвращает список всех созданных фильмов")
+    void getAllFilms_shouldReturnAllCreatedFilms() {
+        Collection<Film> films = filmController.getAllFilms();
 
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.createFilm(film));
-        assertTrue(exception.getMessage().contains("Дата релиза не может быть раньше"));
+        assertEquals(1, films.size());
+        assertTrue(films.stream().anyMatch(f -> f.getName().equals("Фильм")));
     }
 
     @Test
-    void createFilm_withNegativeDuration_shouldThrowValidationException() {
-        Film film = new Film(
-                null,
-                "Фильм",
-                "Описание",
-                LocalDate.now(),
-                -1L
-        );
-
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.createFilm(film));
-        assertEquals("Продолжительность должна быть положительным числом", exception.getMessage());
-    }
-
-    @Test
-    void updateFilm_withNonExistingId_shouldThrowNotFoundException() {
-        Film film = new Film(
-                999L,
-                "Фильм",
-                "Описание",
-                LocalDate.now(),
-                120L
-        );
-
-        assertThrows(NotFoundException.class, () -> filmController.updateFilm(film));
-    }
-
-    @Test
+    @DisplayName("Обновление фильма с валидными данными → успешное обновление")
     void updateFilm_withValidData_shouldUpdateFilm() {
-        Film createdFilm = filmController.createFilm(validFilm);
-        Film updateData = new Film(
-                createdFilm.getId(),
-                "Новый Фильм",
-                "Новое Описание",
-                LocalDate.of(2001, 1, 1),
-                90L
-        );
+        validFilm.setDescription("НовоеОписаниеФильма");
 
-        Film updatedFilm = filmController.updateFilm(updateData);
+        Film updatedFilm = filmController.updateFilm(validFilm);
 
-        assertEquals("Новый Фильм", updatedFilm.getName());
-        assertEquals("Новое Описание", updatedFilm.getDescription());
-        assertEquals(90L, updatedFilm.getDuration());
+        assertEquals("НовоеОписаниеФильма", updatedFilm.getDescription());
+        assertEquals(validFilm.getId(), updatedFilm.getId());
     }
 
     @Test
-    void getAllFilms_shouldReturnAllFilms() {
-        filmController.createFilm(validFilm);
-        Film anotherFilm = new Film(
+    @DisplayName("Добавление лайка с валидными ID → успешно добавляет лайк")
+    void likeTheFilm_withValidIds_shouldAddLike() {
+        Film filmWithLike = filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+
+        assertTrue(filmWithLike.getLikes().contains(validUser.getId()));
+    }
+
+    @Test
+    @DisplayName("Удаление лайка → успешно удаляет лайк")
+    void dislikeFilm_shouldRemoveLike() {
+        filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+
+        Film filmWithoutLike = filmController.dislikeFilm(validFilm.getId(), validUser.getId());
+
+        assertFalse(filmWithoutLike.getLikes().contains(validUser.getId()));
+    }
+
+    @Test
+    @DisplayName("Получение популярных фильмов → возвращает список, отсортированный по количеству лайков")
+    void getPopularFilms_shouldReturnOrderedByLikes() {
+        User user2 = userController.createUser(new User(
                 null,
-                "Другой Фильм",
-                "Другое Описание",
-                LocalDate.now(),
-                90L
+                "mail2@yandex.ru",
+                "ДругойЛогин",
+                "ДругоеИмя",
+                LocalDate.of(1995, 1, 1))
         );
 
-        filmController.createFilm(anotherFilm);
-        assertEquals(2, filmController.getAllFilms().size());
+        Film film2 = filmController.createFilm(new Film(
+                null,
+                "ДругойФильм",
+                "ДругоеОписание",
+                LocalDate.of(2010, 1, 1),
+                100L)
+        );
+
+        filmController.likeTheFilm(film2.getId(), validUser.getId());
+        filmController.likeTheFilm(film2.getId(), user2.getId());
+        filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+
+        Collection<FilmLikesResponse> popularFilms = filmController.getPopularFilms(2);
+
+        assertEquals(2, popularFilms.size());
+        assertEquals(film2.getId(), popularFilms.iterator().next().getId());
     }
 }

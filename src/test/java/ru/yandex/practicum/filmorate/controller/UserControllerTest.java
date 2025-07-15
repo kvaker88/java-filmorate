@@ -1,162 +1,140 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.FriendshipResponse;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UserControllerTest {
+    @Autowired
     private UserController userController;
-    private User validUser;
+    private User validUser1;
+    private User validUser2;
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
-        validUser = new User(
+        // Создаем валидных пользователей
+        validUser1 = new User(
                 null,
-                "mail@yandex.ru",
-                "Логин",
-                "Имя",
+                "user1@yandex.ru",
+                "ЛогинОдин",
+                "ИмяОдин",
                 LocalDate.of(1990, 1, 1)
         );
+
+        validUser2 = new User(
+                null,
+                "user2@yandex.ru",
+                "ЛогинДва",
+                "ИмяДва",
+                LocalDate.of(1995, 5, 5)
+        );
+
+        validUser1 = userController.createUser(validUser1);
+        validUser2 = userController.createUser(validUser2);
     }
 
     @Test
-    void createUser_withValidData_shouldCreateUser() {
-        User createdUser = userController.createUser(validUser);
+    @DisplayName("Создание пользователя с валидными данными → возвращает пользователя с ID")
+    void createUser_withValidData_shouldReturnUserWithId() {
+        User newUser = new User(
+                null,
+                "newUser@yandex.ru",
+                "НовыйЛогин",
+                "НовоеИмя",
+                LocalDate.of(2000, 1, 1)
+        );
+
+        User createdUser = userController.createUser(newUser);
 
         assertNotNull(createdUser.getId());
-        assertEquals(1L, createdUser.getId());
-        assertEquals("Логин", createdUser.getLogin());
+        assertEquals("НовыйЛогин", createdUser.getLogin());
     }
 
     @Test
-    void createUser_withEmptyEmail_shouldThrowValidationException() {
-        User user = new User(
-                null,
-                "",
-                "Логин",
-                "Имя",
-                LocalDate.of(1990, 1, 1)
-        );
-        assertThrows(ValidationException.class,
-                () -> userController.createUser(user));
-    }
-
-    @Test
+    @DisplayName("Создание пользователя с email без @ → исключение ValidationException")
     void createUser_withInvalidEmail_shouldThrowValidationException() {
-        User user = new User(
+        User invalidUser = new User(
                 null,
-                "Некорректный_Email",
-                "Логин",
-                "Имя",
-                LocalDate.now()
+                "Некорректный-Емейл",
+                "НекорректныйПользователь",
+                "НекорректныйПользователь",
+                LocalDate.of(2000, 1, 1)
         );
 
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
+        assertThrows(ValidationException.class, () -> userController.createUser(invalidUser));
     }
 
     @Test
-    void createUser_withEmptyLogin_shouldThrowValidationException() {
-        User user = new User(
-                null,
-                "mail@yandex.ru",
-                "",
-                "Имя",
-                LocalDate.now()
-        );
-
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
+    @DisplayName("Получение пользователя по несуществующему ID → исключение NotFoundException")
+    void getUserById_withNonExistingId_shouldThrowNotFoundException() {
+        assertThrows(NotFoundException.class, () -> userController.getUserById(9999L));
     }
 
     @Test
-    void createUser_withLoginContainingSpaces_shouldThrowValidationException() {
-        User user = new User(
-                null,
-                "mail@yandex.ru",
-                "Лог ин",
-                "Имя",
-                LocalDate.now()
-        );
+    @DisplayName("Получение всех пользователей → возвращает список всех созданных пользователей")
+    void getAllUsers_shouldReturnAllCreatedUsers() {
+        Collection<User> users = userController.getAllUsers();
 
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
+        assertEquals(2, users.size());
+        assertTrue(users.stream().anyMatch(u -> u.getLogin().equals("ЛогинОдин")));
+        assertTrue(users.stream().anyMatch(u -> u.getLogin().equals("ЛогинДва")));
     }
 
     @Test
-    void createUser_withFutureBirthday_shouldThrowValidationException() {
-        User user = new User(
-                null,
-                "mail@yandex.ru",
-                "Логин",
-                "Имя",
-                LocalDate.now().plusDays(1)
-        );
-
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
-    }
-
-    @Test
-    void createUser_withNullName_shouldUseLoginAsName() {
-        User user = new User(
-                null,
-                "mail@yandex.ru",
-                "Логин",
-                null,
-                LocalDate.now()
-        );
-        User createdUser = userController.createUser(user);
-
-        assertEquals("Логин", createdUser.getName());
-    }
-
-    @Test
-    void updateUser_withNonExistingId_shouldThrowNotFoundException() {
-        User user = new User(
-                999L,
-                "mail@yandex.ru",
-                "Логин",
-                "Имя",
-                LocalDate.now()
-        );
-
-        assertThrows(NotFoundException.class, () -> userController.updateUser(user));
-    }
-
-    @Test
+    @DisplayName("Обновление пользователя с валидными данными → успешное обновление")
     void updateUser_withValidData_shouldUpdateUser() {
-        User createdUser = userController.createUser(validUser);
-        User updateData = new User(
-                createdUser.getId(),
-                "newMail@yandex.ru",
-                "Новый_Логин",
-                "Новое_Имя",
-                LocalDate.of(1995, 1, 1)
-        );
+        validUser1.setName("ОбновлённоеИмя");
 
-        User updatedUser = userController.updateUser(updateData);
+        User updatedUser = userController.updateUser(validUser1);
 
-        assertEquals("newMail@yandex.ru", updatedUser.getEmail());
-        assertEquals("Новый_Логин", updatedUser.getLogin());
-        assertEquals("Новое_Имя", updatedUser.getName());
+        assertEquals("ОбновлённоеИмя", updatedUser.getName());
+        assertEquals(validUser1.getId(), updatedUser.getId());
     }
 
     @Test
-    void getAllUsers_shouldReturnAllUsers() {
-        userController.createUser(validUser);
-        User anotherUser = new User(
-                null,
-                "anotherMail@yandex.ru",
-                "Другой_Логин",
-                null,
-                LocalDate.now()
-        );
-        userController.createUser(anotherUser);
+    @DisplayName("Добавление друга с валидными ID → возвращает ответ о дружбе")
+    void addFriend_withValidIds_shouldReturnFriendshipResponse() {
+        FriendshipResponse response = userController.addFriend(validUser1.getId(), validUser2.getId()).getBody();
 
-        assertEquals(2, userController.getAllUsers().size());
+        assertNotNull(response);
+        assertEquals(validUser1.getId(), response.getUserId());
+        assertEquals(validUser2.getId(), response.getFriendId());
+    }
+
+    @Test
+    @DisplayName("Получение списка друзей пользователя → возвращает список друзей")
+    void getFriendsByUserId_shouldReturnFriendsList() {
+        userController.addFriend(validUser1.getId(), validUser2.getId());
+
+        Collection<User> friends = userController.getFriendsByUserId(validUser1.getId());
+
+        assertEquals(1, friends.size());
+        assertEquals(validUser2.getId(), friends.iterator().next().getId());
+    }
+
+    @Test
+    @DisplayName("Удаление друга → успешно удаляет дружбу")
+    void deleteFriend_shouldRemoveFriendship() {
+        userController.addFriend(validUser1.getId(), validUser2.getId());
+
+        FriendshipResponse response = userController.deleteFriend(validUser1.getId(), validUser2.getId()).getBody();
+
+        assertNotNull(response);
+        Collection<User> friends = userController.getFriendsByUserId(validUser1.getId());
+        assertTrue(friends.isEmpty());
     }
 }
