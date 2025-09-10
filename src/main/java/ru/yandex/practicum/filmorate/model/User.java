@@ -18,6 +18,7 @@ public class User {
     private String name;
     private LocalDate birthday;
     private Set<Long> friends = new HashSet<>();
+    private Set<Long> friendIncomingRequests = new HashSet<>();
 
     public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
@@ -29,6 +30,10 @@ public class User {
 
     public void addFriend(Long friendId) {
         friends.add(friendId);
+    }
+
+    public void addIncomingRequests(Long friendId) {
+        friendIncomingRequests.add(friendId);
     }
 
     public void deleteFriend(Long friendId) {

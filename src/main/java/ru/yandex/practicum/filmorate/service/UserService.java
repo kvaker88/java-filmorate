@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
 import ru.yandex.practicum.filmorate.validation.FriendshipValidator;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
@@ -67,23 +67,23 @@ public class UserService {
     }
 
     public User addFriend(Long userId, Long friendId) {
+        log.info("Запрос на добавление дружбы между {} и {}", userId, friendId);
         FriendshipValidator.validate(userId, friendId, userStorage);
 
-        userStorage.getUserById(userId).addFriend(friendId);
-        userStorage.getUserById(friendId).addFriend(userId);
+        userStorage.addFriend(userId, friendId);
 
-        return userStorage.getUserById(userId);
+        User user = userStorage.getUserById(userId);
+        log.info("Дружба между {} и {} успешно добавлена", userId, friendId);
+        return user;
     }
 
     public User deleteFriend(Long userId, Long friendId) {
+        log.info("Запрос на удаление дружбы между {} и {}", userId, friendId);
         FriendshipValidator.validate(userId, friendId, userStorage);
 
+        userStorage.deleteFriend(userId, friendId);
+
         User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId);
-
-        user.deleteFriend(friendId);
-        friend.deleteFriend(userId);
-
         log.info("Дружба между {} и {} успешно удалена", userId, friendId);
         return user;
     }
@@ -95,26 +95,14 @@ public class UserService {
             throw  new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
         }
 
-        Collection<Long> friendIds = userStorage.getUserById(userId).getFriends();
-
-        return friendIds.stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getFriends(userId);
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        User user = userStorage.getUserById(userId);
-        User otherUser = userStorage.getUserById(otherId);
+        Collection<Long> userFriends = userStorage.getFriendsById(userId);
+        Collection<Long> otherUserFriends = userStorage.getFriendsById(otherId);
 
         FriendshipValidator.validate(userId, otherId, userStorage);
-
-        Collection<Long> userFriends = new HashSet<>(
-                user.getFriends() != null ?
-                        user.getFriends() : Set.of());
-
-        Collection<Long> otherUserFriends = new HashSet<>(
-                otherUser.getFriends() != null ?
-                        otherUser.getFriends() : Set.of());
 
         if (userFriends.isEmpty() || otherUserFriends.isEmpty()) {
             return Set.of(); // Ранний вывод, если один из листов пуст

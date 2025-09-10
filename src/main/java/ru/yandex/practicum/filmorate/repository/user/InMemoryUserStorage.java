@@ -1,14 +1,16 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.repository.user;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Repository("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new ConcurrentHashMap<>();
 
@@ -39,8 +41,28 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public List<User> getFriends(Long userId) {
+        return List.of();
+    }
+
+    @Override
     public boolean doesUserNotExist(Long id) {
         return !users.containsKey(id);
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+
+    }
+
+    @Override
+    public HashSet<Long> getFriendsById(Long userId) {
+        return null;
     }
 
     private long getNextId() {
@@ -52,3 +74,4 @@ public class InMemoryUserStorage implements UserStorage {
         return ++currentMaxId;
     }
 }
+

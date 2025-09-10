@@ -4,20 +4,36 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.film.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.film.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@JdbcTest
+@AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class, FilmService.class,
+        UserService.class, FilmController.class, UserController.class, FilmRowMapper.class, UserRowMapper.class,
+        MpaRowMapper.class, GenreRowMapper.class})
 class FilmControllerTest {
 
     @Autowired
@@ -26,12 +42,12 @@ class FilmControllerTest {
     @Autowired
     private UserController userController;
 
-    private Film validFilm;
+    private Film testFilm;
     private User validUser;
 
     @BeforeEach
     void setUp() {
-        validFilm = new Film(
+        testFilm = new Film(
                 null,
                 "Фильм",
                 "ОписаниеФильма",
@@ -47,7 +63,7 @@ class FilmControllerTest {
                 LocalDate.of(1990, 1, 1)
         );
 
-        validFilm = filmController.createFilm(validFilm);
+        testFilm = filmController.createFilm(testFilm);
         validUser = userController.createUser(validUser);
     }
 
@@ -71,7 +87,7 @@ class FilmControllerTest {
     @Test
     @DisplayName("Создание фильма с невалидной продолжительностью → исключение ValidationException")
     void createFilm_withInvalidDuration_shouldThrowValidationException() {
-        Film invalidFilm = new Film(
+        Film intestFilm = new Film(
                 null,
                 "НекорректныйФильм",
                 "ОписаниеФильма",
@@ -79,7 +95,7 @@ class FilmControllerTest {
                 -90L
         );
 
-        assertThrows(ValidationException.class, () -> filmController.createFilm(invalidFilm));
+        assertThrows(ValidationException.class, () -> filmController.createFilm(intestFilm));
     }
 
     @Test
@@ -100,18 +116,18 @@ class FilmControllerTest {
     @Test
     @DisplayName("Обновление фильма с валидными данными → успешное обновление")
     void updateFilm_withValidData_shouldUpdateFilm() {
-        validFilm.setDescription("НовоеОписаниеФильма");
+        testFilm.setDescription("НовоеОписаниеФильма");
 
-        Film updatedFilm = filmController.updateFilm(validFilm);
+        Film updatedFilm = filmController.updateFilm(testFilm);
 
         assertEquals("НовоеОписаниеФильма", updatedFilm.getDescription());
-        assertEquals(validFilm.getId(), updatedFilm.getId());
+        assertEquals(testFilm.getId(), updatedFilm.getId());
     }
 
     @Test
     @DisplayName("Добавление лайка с валидными ID → успешно добавляет лайк")
     void likeTheFilm_withValidIds_shouldAddLike() {
-        Film filmWithLike = filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+        Film filmWithLike = filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
         assertTrue(filmWithLike.getLikes().contains(validUser.getId()));
     }
@@ -119,9 +135,9 @@ class FilmControllerTest {
     @Test
     @DisplayName("Удаление лайка → успешно удаляет лайк")
     void dislikeFilm_shouldRemoveLike() {
-        filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+        filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
-        Film filmWithoutLike = filmController.dislikeFilm(validFilm.getId(), validUser.getId());
+        Film filmWithoutLike = filmController.dislikeFilm(testFilm.getId(), validUser.getId());
 
         assertFalse(filmWithoutLike.getLikes().contains(validUser.getId()));
     }
@@ -147,7 +163,7 @@ class FilmControllerTest {
 
         filmController.likeTheFilm(film2.getId(), validUser.getId());
         filmController.likeTheFilm(film2.getId(), user2.getId());
-        filmController.likeTheFilm(validFilm.getId(), validUser.getId());
+        filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
         Collection<Film> popularFilms = filmController.getPopularFilms(2);
 

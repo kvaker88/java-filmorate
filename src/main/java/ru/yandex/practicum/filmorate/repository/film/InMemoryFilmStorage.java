@@ -1,7 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+
+package ru.yandex.practicum.filmorate.repository.film;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.repository.FilmStorage;
 
 import java.util.Collection;
 import java.util.Map;
@@ -42,6 +44,16 @@ public class InMemoryFilmStorage implements FilmStorage {
         return !films.containsKey(id);
     }
 
+    @Override
+    public void addLike(Long filmId, Long userId) {
+
+    }
+
+    @Override
+    public void deleteLike(Long filmId, Long userId) {
+
+    }
+
     private long getNextId() {
         long currentMaxId = films.keySet()
                 .stream()
@@ -51,3 +63,4 @@ public class InMemoryFilmStorage implements FilmStorage {
         return ++currentMaxId;
     }
 }
+

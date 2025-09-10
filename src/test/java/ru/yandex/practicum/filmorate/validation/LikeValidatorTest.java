@@ -3,27 +3,44 @@ package ru.yandex.practicum.filmorate.validation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.film.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.repository.film.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.repository.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.repository.FilmStorage;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@JdbcTest
+@AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class, FilmService.class, UserService.class, FilmController.class, UserController.class, FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
 class LikeValidatorTest {
     private UserStorage userStorage;
     private FilmStorage filmStorage;
     private User validUser;
-    private Film validFilm;
+    private Film testFilm;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +55,7 @@ class LikeValidatorTest {
                 LocalDate.of(1990, 1, 1)
         );
 
-        validFilm = new Film(
+        testFilm = new Film(
                 1L,
                 "Фильм",
                 "Описание",
@@ -47,7 +64,7 @@ class LikeValidatorTest {
         );
 
         userStorage.addUser(validUser);
-        filmStorage.addFilm(validFilm);
+        filmStorage.addFilm(testFilm);
     }
 
     @Test
@@ -56,7 +73,7 @@ class LikeValidatorTest {
         assertDoesNotThrow(() ->
                 LikeValidator.validate(
                         validUser.getId(),
-                        validFilm.getId(),
+                        testFilm.getId(),
                         userStorage,
                         filmStorage
                 )
@@ -70,7 +87,7 @@ class LikeValidatorTest {
                 NotFoundException.class,
                 () -> LikeValidator.validate(
                         999L,
-                        validFilm.getId(),
+                        testFilm.getId(),
                         userStorage,
                         filmStorage
                 )
@@ -102,7 +119,7 @@ class LikeValidatorTest {
                 NullPointerException.class,
                 () -> LikeValidator.validate(
                         null,
-                        validFilm.getId(),
+                        testFilm.getId(),
                         userStorage,
                         filmStorage
                 )
