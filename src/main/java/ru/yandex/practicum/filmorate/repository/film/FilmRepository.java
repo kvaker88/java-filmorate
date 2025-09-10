@@ -18,28 +18,27 @@ import java.util.Set;
 @Repository
 @Primary
 public class FilmRepository extends BaseRepository<Film> implements FilmStorage {
-    private static final String FIND_ALL_QUERY = "" +
+    private static final String FIND_ALL_QUERY =
             "SELECT f.*, " +
             "m.id as mpa_id, " +
             "m.name as mpa_name " +
             "FROM films f " +
             "JOIN mpa m ON f.mpa_id = m.id";
-    private static final String FIND_BY_ID_QUERY = "" +
+    private static final String FIND_BY_ID_QUERY =
             "SELECT f.*, " +
             "m.id as mpa_id, " +
             "m.name as mpa_name " +
             "FROM films f " +
             "JOIN mpa m ON f.mpa_id = m.id " +
             "WHERE f.id = ?";
-    private static final String INSERT_QUERY = "" +
+    private static final String INSERT_QUERY =
             "INSERT INTO films " +
             "(name, description, release_date, duration, mpa_id) " +
             "VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "" +
+    private static final String UPDATE_QUERY =
             "UPDATE films " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
-    private static final String COUNT_QUERY = "SELECT COUNT(*) FROM films";
     private static final String EXISTS_QUERY = "SELECT COUNT(*) FROM films WHERE id = ?";
 
     private final GenreRepository genreRepository;
@@ -53,17 +52,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     @Override
-    public Long getFilmsSize() {
-        return jdbc.queryForObject(COUNT_QUERY, Long.class);
-    }
-
-    @Override
     public Collection<Film> getAllFilms() {
         List<Film> films = findMany(FIND_ALL_QUERY);
-        films.forEach(film -> {
-            loadFilmGenres(film);
-            loadFilmLikes(film);
-        });
+        films.forEach(this::loadFilmGenres);
         return films;
     }
 
@@ -72,7 +63,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         Film film = findOne(FIND_BY_ID_QUERY, filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с ID " + filmId + " не найден"));
         loadFilmGenres(film);
-        loadFilmLikes(film);
         return film;
     }
 
@@ -167,14 +157,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
     }
 
-    private void loadFilmLikes(Film film) {
-        if (film != null) {
-            String sql = "SELECT user_id FROM film_likes WHERE film_id = ?";
-            List<Long> likes = jdbc.query(sql, (rs, rowNum) -> rs.getLong("user_id"), film.getId());
-            film.setLikes(new HashSet<>(likes));
-        }
-    }
-
     private void saveFilmGenres(Film film) {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             genreRepository.addGenresToFilm(film.getId(), film.getGenres());
@@ -184,5 +166,37 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmGenres(Film film) {
         genreRepository.removeAllGenresFromFilm(film.getId());
         saveFilmGenres(film);
+    }
+
+    public Collection<Film> getPopularFilms(int count) {
+        String sql = """
+        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        LEFT JOIN (
+            SELECT film_id, COUNT(user_id) as likes_count
+            FROM film_likes
+            GROUP BY film_id
+        ) l ON f.id = l.film_id
+        ORDER BY l.likes_count DESC NULLS LAST, f.id ASC
+        LIMIT ?
+    """;
+
+        List<Film> films = findMany(sql, count);
+        films.forEach(this::loadFilmGenres);
+        return films;
+    }
+
+    @Override
+    public boolean isLikeExists(Long filmId, Long userId) {
+        String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
+        Integer count = jdbc.queryForObject(sql, Integer.class, filmId, userId);
+        return count != null && count > 0;
+    }
+
+    public int getLikesCount(Long filmId) {
+        String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
+        Integer count = jdbc.queryForObject(sql, Integer.class, filmId);
+        return count != null ? count : 0;
     }
 }

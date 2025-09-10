@@ -31,7 +31,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String INSERT_FRIENDSHIP_QUERY =
             "INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)";
     private static final String INSERT_FRIEND_REQUEST_QUERY =
-            "INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES (?, ?, 'PENDING')";
+            "INSERT INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)";
     private static final String DELETE_FRIENDSHIP_QUERY =
             "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
     private static final String DELETE_FRIEND_REQUEST_QUERY =
@@ -39,14 +39,13 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     private static final String CHECK_FRIENDSHIP_QUERY =
             "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
     private static final String CHECK_FRIEND_REQUEST_QUERY =
-            "SELECT COUNT(*) FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = 'PENDING'";
+            "SELECT COUNT(*) FROM friend_requests WHERE sender_id = ? AND receiver_id = ?";
     private static final String GET_FRIENDS_QUERY =
             "SELECT friend_id FROM friendships WHERE user_id = ?";
     private static final String GET_OUTGOING_REQUESTS_QUERY =
-            "SELECT receiver_id FROM friend_requests WHERE sender_id = ? AND status = 'PENDING'";
+            "SELECT receiver_id FROM friend_requests WHERE sender_id = ?";
 
 
-    private static final String COUNT_QUERY = "SELECT COUNT(*) FROM users";
     private static final String EXISTS_QUERY = "SELECT COUNT(*) FROM users WHERE id = ?";
 
     public UserRepository(JdbcTemplate jdbc, UserRowMapper userRowMapper) {
@@ -54,58 +53,14 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     @Override
-    public Long getUsersSize() {
-        return jdbc.queryForObject(COUNT_QUERY, Long.class);
-    }
-
-    @Override
     public List<User> getAllUsers() {
-        List<User> users = findMany(FIND_ALL_QUERY);
-
-        for (User user : users) {
-            Set<Long> friends = getFriendsFromDb(user.getId());
-            user.setFriends(friends);
-        }
-
-        for (User user : users) {
-            Set<Long> friends = getIncomingRequestsFromDb(user.getId());
-            user.setFriendIncomingRequests(friends);
-        }
-
-        return users;
+        return findMany(FIND_ALL_QUERY);
     }
 
     @Override
     public User getUserById(Long userId) {
-        User user = findOne(FIND_BY_ID_QUERY, userId)
+        return findOne(FIND_BY_ID_QUERY, userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
-
-        loadUserRelations(user);
-        return user;
-    }
-
-    private void loadUserRelations(User user) {
-        log.debug("Загрузка связей для пользователя {}", user.getId());
-        Set<Long> friends = getFriendsFromDb(user.getId());
-        log.debug("Найдено друзей: {}", friends);
-        user.setFriends(friends);
-        Set<Long> incomingRequests = getIncomingRequestsFromDb(user.getId());
-        log.debug("Найдено входящих заявок: {}", incomingRequests);
-        user.setFriendIncomingRequests(incomingRequests);
-    }
-
-    private Set<Long> getFriendsFromDb(Long userId) {
-        String sql = "SELECT friend_id FROM friendships WHERE user_id = ?";
-        List<Long> friends = jdbc.query(sql,
-                (rs, rowNum) -> rs.getLong("friend_id"), userId);
-        return new HashSet<>(friends);
-    }
-
-    private Set<Long> getIncomingRequestsFromDb(Long userId) {
-        String sql = "SELECT sender_id FROM friend_requests WHERE receiver_id = ? AND status = 'PENDING'";
-        List<Long> requests = jdbc.query(sql,
-                (rs, rowNum) -> rs.getLong("sender_id"), userId);
-        return new HashSet<>(requests);
     }
 
     @Override
@@ -207,5 +162,22 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
             log.warn("Ошибка при получении друзей и заявок для пользователя {}: {}", userId, e.getMessage());
             return new HashSet<>();
         }
+    }
+
+    public List<Long> getFriendIds(Long userId) {
+        String sql = "SELECT friend_id FROM friendships WHERE user_id = ?";
+        return jdbc.query(sql, (rs, rowNum) -> rs.getLong("friend_id"), userId);
+    }
+
+    public boolean isFriendRequestExists(Long senderId, Long receiverId) {
+        String sql = "SELECT COUNT(*) FROM friend_requests WHERE sender_id = ? AND receiver_id = ?";
+        Integer count = jdbc.queryForObject(sql, Integer.class, senderId, receiverId);
+        return count != null && count > 0;
+    }
+
+    public boolean isFriendshipExists(Long userId, Long friendId) {
+        String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
+        Integer count = jdbc.queryForObject(sql, Integer.class, userId, friendId);
+        return count != null && count > 0;
     }
 }

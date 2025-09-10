@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    login VARCHAR(255) NOT NULL,
-    name VARCHAR(255),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    login VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
     birthday DATE
 );
 
@@ -41,14 +41,11 @@ CREATE TABLE IF NOT EXISTS film_likes (
 CREATE TABLE IF NOT EXISTS friendships (
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     friend_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, friend_id)
 );
 
 CREATE TABLE IF NOT EXISTS friend_requests (
     sender_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     receiver_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'PENDING',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (sender_id, receiver_id)
 );

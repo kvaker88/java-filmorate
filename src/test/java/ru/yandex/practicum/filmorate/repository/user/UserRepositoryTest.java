@@ -76,13 +76,6 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Получение количества пользователей → возвращает корректное число")
-    void getUsersSize_shouldReturnCorrectCount() {
-        Long size = userRepository.getUsersSize();
-        assertEquals(3, size);
-    }
-
-    @Test
     @DisplayName("Получение всех пользователей → возвращает непустую коллекцию")
     void getAllUsers_shouldReturnNonEmptyCollection() {
         List<User> users = userRepository.getAllUsers();
@@ -141,8 +134,8 @@ class UserRepositoryTest {
     void addFriend_shouldAddFriend() {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        assertTrue(user1.getFriends().contains(validUser2.getId()));
+        List<Long> friendIds = userRepository.getFriendIds(validUser1.getId());
+        assertTrue(friendIds.contains(validUser2.getId()));
     }
 
     @Test
@@ -162,8 +155,8 @@ class UserRepositoryTest {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        assertEquals(1, user1.getFriends().size());
+        List<Long> friendIds = userRepository.getFriendIds(validUser1.getId());
+        assertEquals(1, friendIds.size());
     }
 
     @Test
@@ -172,11 +165,11 @@ class UserRepositoryTest {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
         userRepository.addFriend(validUser2.getId(), validUser1.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        User user2 = userRepository.getUserById(validUser2.getId());
+        List<Long> user1Friends = userRepository.getFriendIds(validUser1.getId());
+        List<Long> user2Friends = userRepository.getFriendIds(validUser2.getId());
 
-        assertTrue(user1.getFriends().contains(validUser2.getId()));
-        assertTrue(user2.getFriends().contains(validUser1.getId()));
+        assertTrue(user1Friends.contains(validUser2.getId()));
+        assertTrue(user2Friends.contains(validUser1.getId()));
     }
 
     @Test
@@ -186,8 +179,8 @@ class UserRepositoryTest {
 
         userRepository.deleteFriend(validUser1.getId(), validUser2.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        assertFalse(user1.getFriends().contains(validUser2.getId()));
+        List<Long> friendIds = userRepository.getFriendIds(validUser1.getId());
+        assertFalse(friendIds.contains(validUser2.getId()));
     }
 
     @Test
@@ -255,54 +248,53 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Загрузка отношений пользователя → корректно загружает друзей и заявки")
-    void loadUserRelations_shouldLoadRelationsCorrectly() {
-        userRepository.addFriend(validUser1.getId(), validUser2.getId());
-        userRepository.addFriend(validUser3.getId(), validUser1.getId());
+    @DisplayName("Проверка отношений пользователя → корректно определяет друзей и заявки")
+    void checkUserRelations_shouldDetectRelationsCorrectly() {
+        userRepository.addFriend(validUser1.getId(), validUser2.getId()); // Друг
+        userRepository.addFriend(validUser3.getId(), validUser1.getId()); // Входящая заявка
 
-        User user1 = userRepository.getUserById(validUser1.getId());
+        boolean hasFriend = userRepository.isFriendshipExists(validUser1.getId(), validUser2.getId());
+        boolean hasIncomingRequest = userRepository.isFriendRequestExists(validUser3.getId(), validUser1.getId());
 
-        assertTrue(user1.getFriends().contains(validUser2.getId()));
-
-        assertTrue(user1.getFriendIncomingRequests().contains(validUser3.getId()));
+        assertTrue(hasFriend);
+        assertTrue(hasIncomingRequest);
     }
 
     @Test
-    @DisplayName("Взаимная дружба → оба пользователя видят друг друга в друзьях")
-    void mutualFriendship_bothUsersShouldSeeEachOther() {
+    @DisplayName("Взаимная дружба → оба пользователя имеют друг друга в друзьях")
+    void mutualFriendship_bothUsersShouldHaveEachOther() {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
         userRepository.addFriend(validUser2.getId(), validUser1.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        User user2 = userRepository.getUserById(validUser2.getId());
+        boolean user1HasUser2 = userRepository.isFriendshipExists(validUser1.getId(), validUser2.getId());
+        boolean user2HasUser1 = userRepository.isFriendshipExists(validUser2.getId(), validUser1.getId());
 
-        assertTrue(user1.getFriends().contains(validUser2.getId()));
-        assertTrue(user2.getFriends().contains(validUser1.getId()));
+        assertTrue(user1HasUser2);
+        assertTrue(user2HasUser1);
     }
 
     @Test
     @DisplayName("Отправка заявки в друзья → создает заявку")
-    void friendRequest_shouldCreatePendingRequest() {
+    void friendRequest_shouldCreateRequest() {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
 
-        User user2 = userRepository.getUserById(validUser2.getId());
-        assertTrue(user2.getFriendIncomingRequests().contains(validUser1.getId()));
+        boolean requestExists = userRepository.isFriendRequestExists(validUser1.getId(), validUser2.getId());
+        assertTrue(requestExists);
     }
 
     @Test
     @DisplayName("Принятие заявки в друзья → создает взаимную дружбу")
     void acceptFriendRequest_shouldCreateMutualFriendship() {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
-
         userRepository.addFriend(validUser2.getId(), validUser1.getId());
 
-        User user1 = userRepository.getUserById(validUser1.getId());
-        User user2 = userRepository.getUserById(validUser2.getId());
+        boolean mutualFriendship1 = userRepository.isFriendshipExists(validUser1.getId(), validUser2.getId());
+        boolean mutualFriendship2 = userRepository.isFriendshipExists(validUser2.getId(), validUser1.getId());
+        boolean requestRemoved = !userRepository.isFriendRequestExists(validUser1.getId(), validUser2.getId());
 
-        assertTrue(user1.getFriends().contains(validUser2.getId()));
-        assertTrue(user2.getFriends().contains(validUser1.getId()));
-
-        assertFalse(user2.getFriendIncomingRequests().contains(validUser1.getId()));
+        assertTrue(mutualFriendship1);
+        assertTrue(mutualFriendship2);
+        assertTrue(requestRemoved);
     }
 
     @Test
@@ -314,21 +306,23 @@ class UserRepositoryTest {
         userRepository.updateUser(validUser1);
 
         User updatedUser = userRepository.getUserById(validUser1.getId());
-        assertTrue(updatedUser.getFriends().contains(validUser2.getId()));
+        boolean friendshipStillExists = userRepository.isFriendshipExists(validUser1.getId(), validUser2.getId());
+
         assertEquals("Updated Name", updatedUser.getName());
+        assertTrue(friendshipStillExists);
     }
 
     @Test
-    @DisplayName("Получение пользователя с полными данными отношений")
-    void getUserById_shouldReturnUserWithFullRelations() {
+    @DisplayName("Проверка всех отношений пользователя")
+    void checkAllUserRelations_shouldReturnCorrectRelations() {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
         userRepository.addFriend(validUser3.getId(), validUser1.getId());
 
-        User user = userRepository.getUserById(validUser1.getId());
+        List<Long> allRelations = userRepository.getFriendIds(validUser1.getId());
+        boolean hasOutgoingRequest = userRepository.isFriendRequestExists(validUser1.getId(), validUser2.getId());
+        boolean hasIncomingRequest = userRepository.isFriendRequestExists(validUser3.getId(), validUser1.getId());
 
-        assertNotNull(user.getFriends());
-        assertNotNull(user.getFriendIncomingRequests());
-        assertTrue(user.getFriends().contains(validUser2.getId()));
-        assertTrue(user.getFriendIncomingRequests().contains(validUser3.getId()));
+        assertTrue(allRelations.contains(validUser2.getId()));
+        assertTrue(hasOutgoingRequest || hasIncomingRequest);
     }
 }

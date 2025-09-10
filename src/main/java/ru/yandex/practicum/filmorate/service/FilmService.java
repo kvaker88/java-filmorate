@@ -23,7 +23,7 @@ public class FilmService {
     private final UserStorage userStorage;
 
     public Collection<Film> getAllFilms() {
-        log.info("Запрос на получение всех фильмов. Текущее количество: {}", filmStorage.getFilmsSize());
+        log.info("Запрос на получение всех фильмов. Текущее количество: {}", filmStorage.getAllFilms().size());
         return filmStorage.getAllFilms();
     }
 
@@ -68,37 +68,38 @@ public class FilmService {
     public Film likeTheFilm(Long filmId, Long userId) {
         log.info("Запрос на лайк фильму = {}, от пользователя = {}", filmId, userId);
         LikeValidator.validate(filmId, userId, userStorage, filmStorage);
+
+        if (filmStorage.isLikeExists(filmId, userId)) {
+            throw new ValidationException("Лайк уже поставлен");
+        }
+
         filmStorage.addLike(filmId, userId);
-        Film film = filmStorage.getFilmById(filmId);
-        film.addLike(userId);
-        log.info("Лайк поставлен");
-        return film;
+        log.info("Лайк добавлен");
+        return filmStorage.getFilmById(filmId);
     }
 
     public Film dislikeFilm(Long filmId, Long userId) {
         log.info("Запрос на удаление лайка фильму = {}, от пользователя = {}", filmId, userId);
         LikeValidator.validate(filmId, userId, userStorage, filmStorage);
-        Film film = filmStorage.getFilmById(filmId);
 
-        if (!film.getLikes().contains(userId)) {
+        if (!filmStorage.isLikeExists(filmId, userId)) {
             log.warn("Пользователь {} не ставил лайк фильму {}", userId, filmId);
             throw new ValidationException("Лайк не найден");
         }
+
         filmStorage.deleteLike(filmId, userId);
-        film.deleteLike(userId);
         log.info("Лайк удалён");
-        return film;
+        return filmStorage.getFilmById(filmId);
     }
 
     public Collection<Film> getPopularFilms(int count) {
         log.info("Запрос на получение {} популярных фильмов", count);
+        int limit = count > 0 ? count : 10;
+        return filmStorage.getPopularFilms(limit);
+    }
 
-        return filmStorage.getAllFilms().stream()
-                .sorted((f1, f2) ->
-                        Integer.compare(f2.getLikes().size(),
-                                f1.getLikes().size()))
-                .limit(count > 0 ? count : 10)
-                .toList();
+    public boolean isLikeExists(Long filmId, Long userId) {
+        return filmStorage.isLikeExists(filmId, userId);
     }
 }
 

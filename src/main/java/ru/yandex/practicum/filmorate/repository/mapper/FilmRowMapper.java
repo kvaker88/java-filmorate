@@ -35,9 +35,7 @@ public class FilmRowMapper implements RowMapper<Film> {
         Mpa mpa = mpaRowMapper.mapRow(rs, rowNum);
         film.setMpa(mpa);
 
-        // Инициализируем коллекции
         film.setGenres(new HashSet<>());
-        film.setLikes(new HashSet<>());
 
         return film;
     }

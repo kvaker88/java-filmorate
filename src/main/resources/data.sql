@@ -1,14 +1,11 @@
-DELETE FROM mpa;
-DELETE FROM genres;
-
-INSERT INTO mpa (id, name, description) VALUES
+MERGE INTO mpa (id, name, description) KEY(id) VALUES
 (1, 'G', 'Нет возрастных ограничений'),
 (2, 'PG', 'Рекомендуется присутствие родителей'),
 (3, 'PG-13', 'Детям до 13 лет просмотр не желателен'),
 (4, 'R', 'Лицам до 17 лет обязательно присутствие взрослого'),
 (5, 'NC-17', 'Лицам до 18 лет просмотр запрещен');
 
-INSERT INTO genres (id, name) VALUES
+MERGE INTO genres (id, name) KEY(id) VALUES
 (1, 'Комедия'),
 (2, 'Драма'),
 (3, 'Мультфильм'),

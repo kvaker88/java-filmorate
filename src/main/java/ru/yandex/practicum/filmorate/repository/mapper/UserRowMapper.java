@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 
 @Component
 public class UserRowMapper implements RowMapper<User> {
@@ -23,9 +22,6 @@ public class UserRowMapper implements RowMapper<User> {
         if (birthday != null) {
             user.setBirthday(birthday.toLocalDate());
         }
-
-        user.setFriends(new HashSet<>());
-        user.setFriendIncomingRequests(new HashSet<>());
 
         return user;
     }

@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 
 public interface UserStorage {
-    Long getUsersSize();
-
     List<User> getAllUsers();
 
     User getUserById(Long userId);
@@ -25,4 +23,6 @@ public interface UserStorage {
     void deleteFriend(Long userId, Long friendId);
 
     HashSet<Long> getFriendsById(Long userId);
+
+    List<Long> getFriendIds(Long userId);
 }

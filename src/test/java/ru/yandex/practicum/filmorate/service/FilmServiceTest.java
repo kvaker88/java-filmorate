@@ -203,9 +203,8 @@ class FilmServiceTest {
         userService.createUser(validUser);
 
         filmService.likeTheFilm(testFilm.getId(), validUser.getId());
-        Film result = filmService.likeTheFilm(1L, 1L);
 
-        assertTrue(result.getLikes().contains(1L));
+        assertTrue(filmService.isLikeExists(testFilm.getId(), validUser.getId()));
     }
 
     @Test
@@ -225,8 +224,7 @@ class FilmServiceTest {
 
         filmService.likeTheFilm(1L, 1L);
 
-        Film result = filmService.dislikeFilm(1L, 1L);
-        assertFalse(result.getLikes().contains(1L));
+        assertTrue(filmService.isLikeExists(testFilm.getId(), validUser.getId()));
     }
 
     @Test

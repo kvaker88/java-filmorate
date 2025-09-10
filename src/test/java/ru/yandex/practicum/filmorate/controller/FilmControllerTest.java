@@ -44,6 +44,8 @@ class FilmControllerTest {
 
     private Film testFilm;
     private User validUser;
+    @Autowired
+    private FilmRepository filmRepository;
 
     @BeforeEach
     void setUp() {
@@ -129,7 +131,11 @@ class FilmControllerTest {
     void likeTheFilm_withValidIds_shouldAddLike() {
         Film filmWithLike = filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
-        assertTrue(filmWithLike.getLikes().contains(validUser.getId()));
+        boolean likeExists = filmRepository.isLikeExists(testFilm.getId(), validUser.getId());
+        assertTrue(likeExists);
+
+        assertNotNull(filmWithLike);
+        assertEquals(testFilm.getId(), filmWithLike.getId());
     }
 
     @Test
@@ -137,9 +143,15 @@ class FilmControllerTest {
     void dislikeFilm_shouldRemoveLike() {
         filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
+        assertTrue(filmRepository.isLikeExists(testFilm.getId(), validUser.getId()));
+
         Film filmWithoutLike = filmController.dislikeFilm(testFilm.getId(), validUser.getId());
 
-        assertFalse(filmWithoutLike.getLikes().contains(validUser.getId()));
+        boolean likeExists = filmRepository.isLikeExists(testFilm.getId(), validUser.getId());
+        assertFalse(likeExists);
+
+        assertNotNull(filmWithoutLike);
+        assertEquals(testFilm.getId(), filmWithoutLike.getId());
     }
 
     @Test

@@ -32,7 +32,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @JdbcTest
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class, FilmService.class, UserService.class, FilmController.class, UserController.class, FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
+@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
+        FilmService.class, UserService.class, FilmController.class, UserController.class,
+        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
 class FriendshipValidatorTest {
 
     @Autowired

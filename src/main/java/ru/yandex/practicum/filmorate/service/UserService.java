@@ -21,7 +21,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     public List<User> getAllUsers() {
-        log.info("Запрос на получение всех пользователей. Текущее количество: {}", userStorage.getUsersSize());
+        log.info("Запрос на получение всех пользователей. Текущее количество: {}", userStorage.getAllUsers().size());
         return userStorage.getAllUsers();
     }
 
@@ -95,21 +95,24 @@ public class UserService {
             throw  new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
         }
 
-        return userStorage.getFriends(userId);
+        List<Long> friendIds = userStorage.getFriendIds(userId);
+        return friendIds.stream()
+                .map(userStorage::getUserById)
+                .collect(Collectors.toList());
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        Collection<Long> userFriends = userStorage.getFriendsById(userId);
-        Collection<Long> otherUserFriends = userStorage.getFriendsById(otherId);
+        List<Long> userFriends = userStorage.getFriendIds(userId);
+        List<Long> otherFriends = userStorage.getFriendIds(otherId);
 
         FriendshipValidator.validate(userId, otherId, userStorage);
 
-        if (userFriends.isEmpty() || otherUserFriends.isEmpty()) {
+        if (userFriends.isEmpty() || otherFriends.isEmpty()) {
             return Set.of(); // Ранний вывод, если один из листов пуст
         }
 
         Set<Long> commonFriends = new HashSet<>(userFriends); // Для сохранения иммутабельности
-        commonFriends.retainAll(otherUserFriends);
+        commonFriends.retainAll(otherFriends);
 
         return commonFriends.stream()
                 .map(userStorage::getUserById)

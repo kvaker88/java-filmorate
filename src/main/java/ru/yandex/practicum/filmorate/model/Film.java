@@ -19,7 +19,6 @@ public class Film {
     private Long duration;
     private Mpa mpa;
     private Set<Genre> genres = new HashSet<>();
-    private Set<Long> likes = new HashSet<>();
 
     public Film(Long id, String name, String description, LocalDate releaseDate, Long duration) {
         this.id = id;
@@ -36,14 +35,6 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.mpa = mpa;
-    }
-
-    public void addLike(Long userId) {
-        likes.add(userId);
-    }
-
-    public void deleteLike(Long userId) {
-        likes.remove(userId);
     }
 
     public void addGenre(Genre genre) {

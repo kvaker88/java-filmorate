@@ -68,25 +68,6 @@ class FilmRepositoryTest {
     }
 
     @Test
-    @DisplayName("Получение количества фильмов → возвращает корректное число")
-    void getFilmsSize_shouldReturnCorrectCount() {
-        Long initialSize = filmRepository.getFilmsSize();
-        assertEquals(1, initialSize);
-
-        Film anotherFilm = new Film(
-                null,
-                "Другой фильм",
-                "Другое описание",
-                LocalDate.of(2021, 1, 1),
-                90L
-        );
-        filmRepository.addFilm(anotherFilm);
-
-        Long newSize = filmRepository.getFilmsSize();
-        assertEquals(2, newSize);
-    }
-
-    @Test
     @DisplayName("Получение всех фильмов → возвращает непустую коллекцию")
     void getAllFilms_shouldReturnNonEmptyCollection() {
         Collection<Film> films = filmRepository.getAllFilms();
@@ -131,9 +112,9 @@ class FilmRepositoryTest {
     void addLike_shouldAddLikeToFilm() {
         filmRepository.addLike(testFilm.getId(), validUser.getId());
 
-        Film filmWithLike = filmRepository.getFilmById(testFilm.getId());
-        assertTrue(filmWithLike.getLikes().contains(validUser.getId()));
-        assertEquals(1, filmWithLike.getLikes().size());
+        boolean likeExists = filmRepository.isLikeExists(testFilm.getId(), validUser.getId());
+
+        assertTrue(likeExists);
     }
 
     @Test
@@ -142,8 +123,8 @@ class FilmRepositoryTest {
         filmRepository.addLike(testFilm.getId(), validUser.getId());
         filmRepository.addLike(testFilm.getId(), validUser.getId()); // Дублирующий лайк
 
-        Film film = filmRepository.getFilmById(testFilm.getId());
-        assertEquals(1, film.getLikes().size()); // Всего один лайк
+        int likesCount = filmRepository.getLikesCount(testFilm.getId());
+        assertEquals(1, likesCount); // Всего один лайк
     }
 
     @Test
@@ -153,9 +134,11 @@ class FilmRepositoryTest {
 
         filmRepository.deleteLike(testFilm.getId(), validUser.getId());
 
-        Film filmWithoutLike = filmRepository.getFilmById(testFilm.getId());
-        assertFalse(filmWithoutLike.getLikes().contains(validUser.getId()));
-        assertEquals(0, filmWithoutLike.getLikes().size());
+        boolean likeExists = filmRepository.isLikeExists(testFilm.getId(), validUser.getId());
+        int likesCount = filmRepository.getLikesCount(testFilm.getId());
+
+        assertFalse(likeExists);
+        assertEquals(0, likesCount);
     }
 
     @Test
@@ -191,26 +174,6 @@ class FilmRepositoryTest {
     void doesFilmNotExist_withNonExistingFilm_shouldReturnTrue() {
         boolean result = filmRepository.doesFilmNotExist(9999L);
         assertTrue(result);
-    }
-
-    @Test
-    @DisplayName("Загрузка лайков фильма → корректно загружает список лайков")
-    void loadFilmLikes_shouldLoadLikesCorrectly() {
-        User user2 = new User(
-                null,
-                "user2@yandex.ru",
-                "НовыйПользователь",
-                "Имя",
-                LocalDate.of(1991, 1, 1));
-        userRepository.addUser(user2);
-
-        filmRepository.addLike(testFilm.getId(), validUser.getId());
-        filmRepository.addLike(testFilm.getId(), user2.getId());
-
-        Film film = filmRepository.getFilmById(testFilm.getId());
-        assertEquals(2, film.getLikes().size());
-        assertTrue(film.getLikes().contains(validUser.getId()));
-        assertTrue(film.getLikes().contains(user2.getId()));
     }
 
     @Test
