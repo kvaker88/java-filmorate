@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.validation.FriendshipValidator;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -92,31 +91,18 @@ public class UserService {
         log.info("Запрос получения друзей по ID пользователя = {}", userId);
 
         if (userStorage.doesUserNotExist(userId)) {
-            throw  new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
+            throw new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
         }
 
-        List<Long> friendIds = userStorage.getFriendIds(userId);
-        return friendIds.stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getFriendsByUserId(userId);
     }
 
-    public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        List<Long> userFriends = userStorage.getFriendIds(userId);
-        List<Long> otherFriends = userStorage.getFriendIds(otherId);
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        log.info("Запрос общих друзей пользователей {} и {}", userId, otherId);
 
         FriendshipValidator.validate(userId, otherId, userStorage);
 
-        if (userFriends.isEmpty() || otherFriends.isEmpty()) {
-            return Set.of(); // Ранний вывод, если один из листов пуст
-        }
-
-        Set<Long> commonFriends = new HashSet<>(userFriends); // Для сохранения иммутабельности
-        commonFriends.retainAll(otherFriends);
-
-        return commonFriends.stream()
-                .map(userStorage::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getCommonFriends(userId, otherId);
     }
 }
 

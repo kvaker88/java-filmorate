@@ -24,7 +24,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -231,17 +230,17 @@ class UserRepositoryTest {
         userRepository.addFriend(validUser1.getId(), validUser2.getId());
         userRepository.addFriend(validUser1.getId(), validUser3.getId());
 
-        HashSet<Long> friends = userRepository.getFriendsById(validUser1.getId());
+        List<User> friends = userRepository.getFriendsByUserId(validUser1.getId());
 
         assertEquals(2, friends.size());
-        assertTrue(friends.contains(validUser2.getId()));
-        assertTrue(friends.contains(validUser3.getId()));
+        assertTrue(friends.stream().anyMatch(user -> user.getId().equals(validUser2.getId())));
+        assertTrue(friends.stream().anyMatch(user -> user.getId().equals(validUser3.getId())));
     }
 
     @Test
-    @DisplayName("Получение друзей по ID для пользователя без друзей → возвращает пустое множество")
-    void getFriendsById_withNoFriends_shouldReturnEmptySet() {
-        HashSet<Long> friends = userRepository.getFriendsById(validUser1.getId());
+    @DisplayName("Получение друзей по ID для пользователя без друзей → возвращает пустой список")
+    void getFriendsByUserId_withNoFriends_shouldReturnEmptyList() {
+        List<User> friends = userRepository.getFriendsByUserId(validUser1.getId());
 
         assertNotNull(friends);
         assertTrue(friends.isEmpty());

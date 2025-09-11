@@ -11,10 +11,8 @@ import ru.yandex.practicum.filmorate.repository.BaseRepository;
 import ru.yandex.practicum.filmorate.repository.UserStorage;
 import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository("userRepository")
@@ -144,26 +142,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         return count == null || count == 0;
     }
 
-    public HashSet<Long> getFriendsById(Long userId) {
-        Set<Long> allRelations = new HashSet<>();
-
-        try {
-            List<Long> friends = jdbc.query(GET_FRIENDS_QUERY,
-                    (rs, rowNum) -> rs.getLong("friend_id"), userId);
-            allRelations.addAll(friends);
-
-            List<Long> outgoingRequests = jdbc.query(GET_OUTGOING_REQUESTS_QUERY,
-                    (rs, rowNum) -> rs.getLong("receiver_id"), userId);
-            allRelations.addAll(outgoingRequests);
-
-            return new HashSet<>(allRelations);
-
-        } catch (Exception e) {
-            log.warn("Ошибка при получении друзей и заявок для пользователя {}: {}", userId, e.getMessage());
-            return new HashSet<>();
-        }
-    }
-
+    @Override
     public List<Long> getFriendIds(Long userId) {
         String sql = "SELECT friend_id FROM friendships WHERE user_id = ?";
         return jdbc.query(sql, (rs, rowNum) -> rs.getLong("friend_id"), userId);
@@ -179,5 +158,39 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
         String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
         Integer count = jdbc.queryForObject(sql, Integer.class, userId, friendId);
         return count != null && count > 0;
+    }
+
+    @Override
+    public List<User> getFriendsByUserId(Long userId) {
+        String sql = """
+                    SELECT u.*
+                    FROM users u
+                    JOIN friendships f ON u.id = f.friend_id
+                    WHERE f.user_id = ?
+                """;
+
+        return findMany(sql, userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        String sql = """
+                    WITH user_friends AS (
+                        SELECT friend_id as user_id FROM friendships WHERE user_id = ?
+                        UNION
+                        SELECT user_id as user_id FROM friendships WHERE friend_id = ?
+                    ),
+                    other_friends AS (
+                        SELECT friend_id as user_id FROM friendships WHERE user_id = ?
+                        UNION
+                        SELECT user_id as user_id FROM friendships WHERE friend_id = ?
+                    )
+                    SELECT u.*
+                    FROM users u
+                    JOIN user_friends uf ON u.id = uf.user_id
+                    JOIN other_friends of ON u.id = of.user_id
+                """;
+
+        return findMany(sql, userId, userId, otherId, otherId);
     }
 }
