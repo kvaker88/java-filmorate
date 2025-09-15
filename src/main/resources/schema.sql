@@ -1,0 +1,51 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    login VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    birthday DATE
+);
+
+CREATE TABLE IF NOT EXISTS mpa (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS genres (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS films (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(200),
+    release_date DATE,
+    duration BIGINT,
+    mpa_id BIGINT NULL REFERENCES mpa(id)
+);
+
+CREATE TABLE IF NOT EXISTS film_genres (
+    film_id BIGINT REFERENCES films(id) ON DELETE CASCADE,
+    genre_id BIGINT REFERENCES genres(id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, genre_id)
+);
+
+CREATE TABLE IF NOT EXISTS film_likes (
+    film_id BIGINT REFERENCES films(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    friend_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, friend_id)
+);
+
+CREATE TABLE IF NOT EXISTS friend_requests (
+    sender_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (sender_id, receiver_id)
+);

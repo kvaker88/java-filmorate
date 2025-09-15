@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.validation;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.InvalidFriendshipException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
 
 @Slf4j
 public class FriendshipValidator {

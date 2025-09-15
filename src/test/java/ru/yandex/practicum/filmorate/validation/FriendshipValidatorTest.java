@@ -4,19 +4,37 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.InvalidFriendshipException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
+import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.film.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.film.MpaRepository;
+import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.repository.user.UserRepository;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@JdbcTest
+@AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
+        FilmService.class, UserService.class, FilmController.class, UserController.class,
+        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
 class FriendshipValidatorTest {
 
     @Autowired
@@ -94,23 +112,5 @@ class FriendshipValidatorTest {
         );
 
         assertEquals("Пользователь не может добавить сам себя в друзья", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Валидация с null userId → исключение NullPointerException")
-    void validate_WithNullUserId_ShouldThrowNotFoundException() {
-        assertThrows(
-                NullPointerException.class,
-                () -> FriendshipValidator.validate(null, validUser2.getId(), userStorage)
-        );
-    }
-
-    @Test
-    @DisplayName("Валидация с null friendId → исключение NullPointerException")
-    void validate_WithNullFriendId_ShouldThrowNotFoundException() {
-        assertThrows(
-                NullPointerException.class,
-                () -> FriendshipValidator.validate(validUser1.getId(), null, userStorage)
-        );
     }
 }

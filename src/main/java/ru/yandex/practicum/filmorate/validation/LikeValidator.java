@@ -2,8 +2,9 @@ package ru.yandex.practicum.filmorate.validation;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.repository.FilmStorage;
+import ru.yandex.practicum.filmorate.repository.UserStorage;
 
 @Slf4j
 public class LikeValidator {
@@ -12,10 +13,21 @@ public class LikeValidator {
 
     public static void validate(Long filmId, Long userId,
                                 UserStorage userStorage,
-                                FilmStorage filmStorage
-    ) {
+                                FilmStorage filmStorage) {
         log.info("Валидация лайка фильму = {}, от пользователя = {}", filmId, userId);
 
+        // 1. Сначала проверяем на null
+        if (userId == null) {
+            log.warn("ID пользователя не может быть null");
+            throw new ValidationException("ID пользователя не может быть null");
+        }
+
+        if (filmId == null) {
+            log.warn("ID фильма не может быть null");
+            throw new ValidationException("ID фильма не может быть null");
+        }
+
+        // 2. Затем проверяем существование в базе
         if (userStorage.doesUserNotExist(userId)) {
             log.warn("Пользователь с ID {} не найден", userId);
             throw new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
@@ -25,6 +37,7 @@ public class LikeValidator {
             log.warn("Фильм с ID {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с ID %d не найден", filmId));
         }
+
+        log.info("Валидация пройдена успешно");
     }
 }
-
