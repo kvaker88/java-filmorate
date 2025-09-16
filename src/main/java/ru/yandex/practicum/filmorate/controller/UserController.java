@@ -26,6 +26,10 @@ public class UserController {
         return userService.createUser(user);
     }
 
+    public User createUser(@RequestBody User user) {
+        return create(user);
+    }
+
     @PutMapping
     public User update(@RequestBody User user) {
         return userService.updateUser(user);
@@ -64,5 +68,4 @@ public class UserController {
     public void delete(@PathVariable long userId) {
         userService.deleteById(userId);
     }
-
 }
