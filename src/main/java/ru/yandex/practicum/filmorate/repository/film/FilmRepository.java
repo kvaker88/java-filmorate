@@ -41,8 +41,9 @@ public class FilmRepository implements FilmStorage {
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
-            ps.setInt(4, film.getDuration());
-            ps.setObject(5, film.getMpa() != null ? film.getMpa().getId() : null);
+            ps.setInt(4, Math.toIntExact(film.getDuration()));
+            Integer mpaId = Math.toIntExact((film.getMpa() != null) ? film.getMpa().getId() : null); // <-- Integer, не Long
+            ps.setObject(5, mpaId);
             return ps;
         }, keyHolder);
 
@@ -51,20 +52,19 @@ public class FilmRepository implements FilmStorage {
 
         // жанры без дублей
         upsertFilmGenres(id, film.getGenres());
-
-        // обогащение (MPA/жанры) не возвращаем — сервис при необходимости сам вызовет getFilmById
     }
 
     @Override
     @Transactional
     public void updateFilm(Film film) {
         final String sql = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
+        Integer mpaId = Math.toIntExact((film.getMpa() != null) ? film.getMpa().getId() : null); // <-- Integer
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration(),
-                film.getMpa() != null ? film.getMpa().getId() : null,
+                mpaId,
                 film.getId()
         );
 
@@ -90,7 +90,7 @@ public class FilmRepository implements FilmStorage {
             Mpa mpa = jdbcTemplate.queryForObject(
                     "SELECT id, name, description FROM mpa WHERE id = ?",
                     mpaRowMapper,
-                    base.getMpa().getId()
+                    base.getMpa().getId() // <-- Integer
             );
             base.setMpa(mpa);
         }
@@ -103,7 +103,7 @@ public class FilmRepository implements FilmStorage {
                 genreRowMapper,
                 id
         );
-        base.setGenres(new LinkedHashSet<>(genres)); // в модели Set<Genre>
+        base.setGenres(new LinkedHashSet<>(genres)); // модель хранит Set<Genre>
         return base;
     }
 
@@ -114,10 +114,10 @@ public class FilmRepository implements FilmStorage {
                 filmRowMapper
         );
         // обогащаем
-        Map<Long, Mpa> mpaCache = new HashMap<>();
+        Map<Integer, Mpa> mpaCache = new HashMap<>(); // <-- ключ Integer
         for (Film f : films) {
             if (f.getMpa() != null && f.getMpa().getId() != null) {
-                Long mpaId = f.getMpa().getId();
+                Integer mpaId = Math.toIntExact(f.getMpa().getId());
                 Mpa mpa = mpaCache.computeIfAbsent(mpaId, key ->
                         jdbcTemplate.queryForObject("SELECT id, name, description FROM mpa WHERE id = ?",
                                 mpaRowMapper, key));
@@ -176,9 +176,7 @@ public class FilmRepository implements FilmStorage {
         }
         // сохраняем порядок по популярности
         Map<Long, Integer> order = new HashMap<>();
-        for (int i = 0; i < ids.size(); i++) {
-            order.put(ids.get(i), i);
-        }
+        for (int i = 0; i < ids.size(); i++) order.put(ids.get(i), i);
 
         List<Film> films = ids.stream()
                 .map(this::getFilmById)
@@ -210,10 +208,8 @@ public class FilmRepository implements FilmStorage {
     public void deleteById(long id) {
         // 1) связи фильм—жанры
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", id);
-
         // 2) лайки к фильму
         jdbcTemplate.update("DELETE FROM likes WHERE film_id = ?", id);
-
         // 3) сам фильм
         jdbcTemplate.update("DELETE FROM films WHERE id = ?", id);
     }
@@ -224,13 +220,13 @@ public class FilmRepository implements FilmStorage {
         if (filmId == null || genres == null || genres.isEmpty()) return;
 
         // удалить дубликаты по id и сохранить порядок возрастания id
-        LinkedHashMap<Long, Genre> uniq = new LinkedHashMap<>();
+        LinkedHashMap<Integer, Genre> uniq = new LinkedHashMap<>(); // <-- ключ Integer
         for (Genre g : genres) {
             if (g != null && g.getId() != null) {
-                uniq.put(g.getId(), g);
+                uniq.put(Math.toIntExact(g.getId()), g);
             }
         }
-        for (Long gid : uniq.keySet()) {
+        for (Integer gid : uniq.keySet()) {
             jdbcTemplate.update(
                     "INSERT INTO film_genres (film_id, genre_id) " +
                             "SELECT ?, ? WHERE NOT EXISTS (" +
