@@ -23,19 +23,23 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
+@Import({
+        FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
         FilmService.class, UserService.class, FilmController.class, UserController.class,
-        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
+        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class
+})
 class UserControllerTest {
+
     @Autowired
     private UserController userController;
+
     private User validUser1;
     private User validUser2;
 
@@ -57,8 +61,8 @@ class UserControllerTest {
                 LocalDate.of(1995, 5, 5)
         );
 
-        validUser1 = userController.createUser(validUser1);
-        validUser2 = userController.createUser(validUser2);
+        validUser1 = userController.create(validUser1);
+        validUser2 = userController.create(validUser2);
     }
 
     @Test
@@ -72,7 +76,7 @@ class UserControllerTest {
                 LocalDate.of(2000, 1, 1)
         );
 
-        User createdUser = userController.createUser(newUser);
+        User createdUser = userController.create(newUser);
 
         assertNotNull(createdUser.getId());
         assertEquals("НовыйЛогин", createdUser.getLogin());
@@ -89,19 +93,19 @@ class UserControllerTest {
                 LocalDate.of(2000, 1, 1)
         );
 
-        assertThrows(ValidationException.class, () -> userController.createUser(invalidUser));
+        assertThrows(ValidationException.class, () -> userController.create(invalidUser));
     }
 
     @Test
     @DisplayName("Получение пользователя по несуществующему ID → исключение NotFoundException")
     void getUserById_withNonExistingId_shouldThrowNotFoundException() {
-        assertThrows(NotFoundException.class, () -> userController.getUserById(9999L));
+        assertThrows(NotFoundException.class, () -> userController.getById(9999L));
     }
 
     @Test
     @DisplayName("Получение всех пользователей → возвращает список всех созданных пользователей")
     void getAllUsers_shouldReturnAllCreatedUsers() {
-        Collection<User> users = userController.getAllUsers();
+        List<User> users = userController.getAll();
 
         assertEquals(2, users.size());
         assertTrue(users.stream().anyMatch(u -> u.getLogin().equals("ЛогинОдин")));
@@ -113,16 +117,16 @@ class UserControllerTest {
     void updateUser_withValidData_shouldUpdateUser() {
         validUser1.setName("ОбновлённоеИмя");
 
-        User updatedUser = userController.updateUser(validUser1);
+        User updatedUser = userController.update(validUser1);
 
         assertEquals("ОбновлённоеИмя", updatedUser.getName());
         assertEquals(validUser1.getId(), updatedUser.getId());
     }
 
     @Test
-    @DisplayName("Добавление друга с валидными ID → возвращает ответ о дружбе")
+    @DisplayName("Добавление друга с валидными ID → возвращает пользователя инициатора дружбы")
     void addFriend_withValidIds_shouldReturnFriendshipResponse() {
-        User response = userController.addFriend(validUser1.getId(), validUser2.getId()).getBody();
+        User response = userController.addFriend(validUser1.getId(), validUser2.getId());
 
         assertNotNull(response);
         assertEquals(validUser1.getId(), response.getId());
@@ -133,10 +137,10 @@ class UserControllerTest {
     void getFriendsByUserId_shouldReturnFriendsList() {
         userController.addFriend(validUser1.getId(), validUser2.getId());
 
-        Collection<User> friends = userController.getFriendsByUserId(validUser1.getId());
+        List<User> friends = userController.getFriends(validUser1.getId());
 
         assertEquals(1, friends.size());
-        assertEquals(validUser2.getId(), friends.iterator().next().getId());
+        assertEquals(validUser2.getId(), friends.get(0).getId());
     }
 
     @Test
@@ -144,10 +148,10 @@ class UserControllerTest {
     void deleteFriend_shouldRemoveFriendship() {
         userController.addFriend(validUser1.getId(), validUser2.getId());
 
-        User response = userController.deleteFriend(validUser1.getId(), validUser2.getId()).getBody();
+        User response = userController.deleteFriend(validUser1.getId(), validUser2.getId());
 
         assertNotNull(response);
-        Collection<User> friends = userController.getFriendsByUserId(validUser1.getId());
+        List<User> friends = userController.getFriends(validUser1.getId());
         assertTrue(friends.isEmpty());
     }
 }
