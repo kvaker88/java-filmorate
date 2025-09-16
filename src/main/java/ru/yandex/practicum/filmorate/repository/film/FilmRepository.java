@@ -41,8 +41,8 @@ public class FilmRepository implements FilmStorage {
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
-            ps.setInt(4, Math.toIntExact(film.getDuration()));
-            Integer mpaId = Math.toIntExact((film.getMpa() != null) ? film.getMpa().getId() : null); // <-- Integer, не Long
+            ps.setInt(4, film.getDuration());
+            Integer mpaId = (film.getMpa() != null) ? film.getMpa().getId() : null; // <-- Integer, не Long
             ps.setObject(5, mpaId);
             return ps;
         }, keyHolder);
@@ -58,7 +58,7 @@ public class FilmRepository implements FilmStorage {
     @Transactional
     public void updateFilm(Film film) {
         final String sql = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
-        Integer mpaId = Math.toIntExact((film.getMpa() != null) ? film.getMpa().getId() : null); // <-- Integer
+        Integer mpaId = (film.getMpa() != null) ? film.getMpa().getId() : null; // <-- Integer
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
@@ -117,7 +117,7 @@ public class FilmRepository implements FilmStorage {
         Map<Integer, Mpa> mpaCache = new HashMap<>(); // <-- ключ Integer
         for (Film f : films) {
             if (f.getMpa() != null && f.getMpa().getId() != null) {
-                Integer mpaId = Math.toIntExact(f.getMpa().getId());
+                Integer mpaId = f.getMpa().getId();
                 Mpa mpa = mpaCache.computeIfAbsent(mpaId, key ->
                         jdbcTemplate.queryForObject("SELECT id, name, description FROM mpa WHERE id = ?",
                                 mpaRowMapper, key));
@@ -223,7 +223,7 @@ public class FilmRepository implements FilmStorage {
         LinkedHashMap<Integer, Genre> uniq = new LinkedHashMap<>(); // <-- ключ Integer
         for (Genre g : genres) {
             if (g != null && g.getId() != null) {
-                uniq.put(Math.toIntExact(g.getId()), g);
+                uniq.put(g.getId(), g);
             }
         }
         for (Integer gid : uniq.keySet()) {
