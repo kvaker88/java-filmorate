@@ -26,7 +26,7 @@ public class UserRepository implements UserStorage {
     // ===== CRUD =====
 
     @Override
-    public User addUser(User user) {
+    public void addUser(User user) {
         final String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
@@ -40,11 +40,10 @@ public class UserRepository implements UserStorage {
 
         Long id = Objects.requireNonNull(keyHolder.getKey()).longValue();
         user.setId(id);
-        return user;
     }
 
     @Override
-    public User updateUser(User user) {
+    public void updateUser(User user) {
         final String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
         jdbcTemplate.update(sql,
                 user.getEmail(),
@@ -53,7 +52,6 @@ public class UserRepository implements UserStorage {
                 Date.valueOf(user.getBirthday()),
                 user.getId()
         );
-        return getUserById(user.getId());
     }
 
     @Override
@@ -100,6 +98,18 @@ public class UserRepository implements UserStorage {
     }
 
     @Override
+    public List<User> getFriends(Long userId) {
+        // делегируем на уже реализованный метод
+        return getFriendsByUserId(userId);
+    }
+
+    @Override
+    public List<Long> getFriendIds(Long userId) {
+        final String sql = "SELECT friend_id FROM user_friends WHERE user_id = ? ORDER BY friend_id";
+        return jdbcTemplate.query(sql, (rs, rn) -> rs.getLong(1), userId);
+    }
+
+    @Override
     public List<User> getFriendsByUserId(Long userId) {
         final String sql =
                 "SELECT u.id, u.email, u.login, u.name, u.birthday " +
@@ -134,7 +144,7 @@ public class UserRepository implements UserStorage {
 
     @Override
     public boolean doesUserNotExist(Long id) {
-        return !existsById(id);
+        return id == null || !existsById(id);
     }
 
     @Override

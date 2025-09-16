@@ -33,7 +33,7 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     @Transactional
-    public Film addFilm(Film film) {
+    public void addFilm(Film film) {
         final String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
@@ -52,13 +52,12 @@ public class FilmRepository implements FilmStorage {
         // жанры без дублей
         upsertFilmGenres(id, film.getGenres());
 
-        // подтянем MPA и жанры с названиями
-        return getFilmById(id);
+        // обогащение (MPA/жанры) не возвращаем — сервис при необходимости сам вызовет getFilmById
     }
 
     @Override
     @Transactional
-    public Film updateFilm(Film film) {
+    public void updateFilm(Film film) {
         final String sql = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
@@ -69,11 +68,9 @@ public class FilmRepository implements FilmStorage {
                 film.getId()
         );
 
-        // перезапишем жанры (без дублей)
+        // перезаписываем жанры (без дублей)
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         upsertFilmGenres(film.getId(), film.getGenres());
-
-        return getFilmById(film.getId());
     }
 
     @Override
@@ -106,18 +103,16 @@ public class FilmRepository implements FilmStorage {
                 genreRowMapper,
                 id
         );
-        base.setGenres(genres);
-
+        base.setGenres(new LinkedHashSet<>(genres)); // в модели Set<Genre>
         return base;
     }
 
     @Override
-    public List<Film> getAllFilms() {
+    public Collection<Film> getAllFilms() {
         List<Film> films = jdbcTemplate.query(
                 "SELECT id, name, description, release_date, duration, mpa_id FROM films ORDER BY id",
                 filmRowMapper
         );
-
         // обогащаем
         Map<Long, Mpa> mpaCache = new HashMap<>();
         for (Film f : films) {
@@ -134,7 +129,7 @@ public class FilmRepository implements FilmStorage {
                             "WHERE fg.film_id = ? ORDER BY g.id",
                     genreRowMapper, f.getId()
             );
-            f.setGenres(genres);
+            f.setGenres(new LinkedHashSet<>(genres)); // Set<Genre>
         }
         return films;
     }
@@ -167,7 +162,7 @@ public class FilmRepository implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopularFilms(int limit) {
+    public Collection<Film> getPopularFilms(int limit) {
         final String sqlIds =
                 "SELECT f.id " +
                         "FROM films f " +
@@ -179,7 +174,6 @@ public class FilmRepository implements FilmStorage {
         if (ids.isEmpty()) {
             return List.of();
         }
-
         // сохраняем порядок по популярности
         Map<Long, Integer> order = new HashMap<>();
         for (int i = 0; i < ids.size(); i++) {
@@ -208,7 +202,7 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public boolean doesFilmNotExist(Long id) {
-        return !existsById(id != null ? id : -1);
+        return (id == null) || !existsById(id);
     }
 
     @Override
@@ -226,17 +220,17 @@ public class FilmRepository implements FilmStorage {
 
     // ===== helpers =====
 
-    private void upsertFilmGenres(Long filmId, List<Genre> genres) {
+    private void upsertFilmGenres(Long filmId, Set<Genre> genres) {
         if (filmId == null || genres == null || genres.isEmpty()) return;
 
         // удалить дубликаты по id и сохранить порядок возрастания id
-        LinkedHashMap<Integer, Genre> uniq = new LinkedHashMap<>();
+        LinkedHashMap<Long, Genre> uniq = new LinkedHashMap<>();
         for (Genre g : genres) {
             if (g != null && g.getId() != null) {
                 uniq.put(g.getId(), g);
             }
         }
-        for (Integer gid : uniq.keySet()) {
+        for (Long gid : uniq.keySet()) {
             jdbcTemplate.update(
                     "INSERT INTO film_genres (film_id, genre_id) " +
                             "SELECT ?, ? WHERE NOT EXISTS (" +
