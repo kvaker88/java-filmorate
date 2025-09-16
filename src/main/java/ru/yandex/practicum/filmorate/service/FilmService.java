@@ -17,14 +17,27 @@ import java.util.Collection;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
+
     public static final String FILM_NOT_FOUND = "Фильм с ID = %d не найден";
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
+    // УДАЛЕНИЕ ФИЛЬМА ПО ID
+    public void deleteById(long filmId) {
+        log.info("Запрос на удаление фильма по ID: {}", filmId);
+        if (filmStorage.doesFilmNotExist(filmId)) {
+            log.warn(String.format(FILM_NOT_FOUND, filmId));
+            throw new NotFoundException(String.format(FILM_NOT_FOUND, filmId));
+        }
+        filmStorage.deleteById(filmId);
+        log.info("Фильм {} удалён", filmId);
+    }
+
     public Collection<Film> getAllFilms() {
-        log.info("Запрос на получение всех фильмов. Текущее количество: {}", filmStorage.getAllFilms().size());
-        return filmStorage.getAllFilms();
+        var films = filmStorage.getAllFilms();
+        log.info("Запрос на получение всех фильмов. Текущее количество: {}", films.size());
+        return films;
     }
 
     public Film createFilm(Film film) {
@@ -38,7 +51,7 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        log.info("Запрос обновления фил ьма: {}", film);
+        log.info("Запрос обновления фильма: {}", film);
 
         if (film.getId() == null) {
             log.warn("Ошибка при обновлении фильма: не указан ID");
@@ -46,20 +59,20 @@ public class FilmService {
         }
 
         if (filmStorage.doesFilmNotExist(film.getId())) {
-            log.warn((String.format(FILM_NOT_FOUND, film.getId())));
+            log.warn(String.format(FILM_NOT_FOUND, film.getId()));
             throw new NotFoundException(String.format(FILM_NOT_FOUND, film.getId()));
         }
 
         FilmValidator.validateForUpdate(film);
         filmStorage.updateFilm(film);
-        log.info("Фильм с ID: {} успешно обновлен", film.getId());
+        log.info("Фильм с ID: {} успешно обновлён", film.getId());
         return film;
     }
 
     public Film getFilmById(Long filmId) {
         log.info("Запрос получения фильма по ID: {}", filmId);
         if (filmStorage.doesFilmNotExist(filmId)) {
-            log.warn((String.format(FILM_NOT_FOUND, filmId)));
+            log.warn(String.format(FILM_NOT_FOUND, filmId));
             throw new NotFoundException(String.format(FILM_NOT_FOUND, filmId));
         }
         return filmStorage.getFilmById(filmId);
@@ -102,4 +115,5 @@ public class FilmService {
         return filmStorage.isLikeExists(filmId, userId);
     }
 }
+
 
