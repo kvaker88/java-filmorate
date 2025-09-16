@@ -194,6 +194,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return count != null && count > 0;
     }
 
+    @Override
+    public boolean existsById(long id) {
+        return false;
+    }
+
+    @Override
+    public void deleteById(long id) {
+
+    }
+
     public int getLikesCount(Long filmId) {
         String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
         Integer count = jdbc.queryForObject(sql, Integer.class, filmId);

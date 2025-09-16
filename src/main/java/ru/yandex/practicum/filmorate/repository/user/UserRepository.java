@@ -193,4 +193,14 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
         return findMany(sql, userId, userId, otherId, otherId);
     }
+
+    @Override
+    public boolean existsById(long id) {
+        return false;
+    }
+
+    @Override
+    public void deleteById(long id) {
+
+    }
 }
