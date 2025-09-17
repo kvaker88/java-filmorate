@@ -101,5 +101,11 @@ public class FilmService {
     public boolean isLikeExists(Long filmId, Long userId) {
         return filmStorage.isLikeExists(filmId, userId);
     }
+
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        log.info("Запрос на получение общих фильмов пользователей {} и {}", userId, friendId);
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
 }
 

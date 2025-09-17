@@ -53,4 +53,9 @@ public class FilmController {
             @PathVariable Long userId) {
         return filmService.dislikeFilm(filmId, userId);
     }
+
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId) {
+        return filmService.getCommonFilms(userId, friendId);
+    }
 }
