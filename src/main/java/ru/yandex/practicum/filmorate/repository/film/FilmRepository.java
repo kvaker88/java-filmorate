@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.repository.BaseRepository;
 import ru.yandex.practicum.filmorate.repository.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Primary
@@ -183,6 +180,50 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     """;
 
         List<Film> films = findMany(sql, count);
+        films.forEach(this::loadFilmGenres);
+        return films;
+    }
+
+    public Collection<Film> getPopularFilms(int count, Long genreId, Integer year) {
+        StringBuilder sqlBuilder = new StringBuilder("""
+        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        LEFT JOIN (
+            SELECT film_id, COUNT(user_id) as likes_count
+            FROM film_likes
+            GROUP BY film_id
+        ) l ON f.id = l.film_id
+        """);
+
+        if (genreId != null) {
+            sqlBuilder.append("JOIN film_genres fg ON f.id = fg.film_id ");
+        }
+
+        boolean hasWhere = false;
+
+        if (genreId != null) {
+            sqlBuilder.append("WHERE fg.genre_id = ? ");
+            hasWhere = true;
+        }
+
+        if (year != null) {
+            sqlBuilder.append(hasWhere ? "AND " : "WHERE ");
+            sqlBuilder.append("EXTRACT(YEAR FROM f.release_date) = ? ");
+        }
+
+        sqlBuilder.append("ORDER BY l.likes_count DESC NULLS LAST, f.id ASC LIMIT ?");
+
+        List<Object> params = new ArrayList<>();
+        if (genreId != null) {
+            params.add(genreId);
+        }
+        if (year != null) {
+            params.add(year);
+        }
+        params.add(count);
+
+        List<Film> films = findMany(sqlBuilder.toString(), params.toArray());
         films.forEach(this::loadFilmGenres);
         return films;
     }
