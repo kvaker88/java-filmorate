@@ -234,8 +234,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                         	GROUP BY
                         		films_id.film_id
                         	ORDER BY
-                        		COUNT(f3.user_id) DESC NULLS LAST)
-                """;
+                        		COUNT(f3.user_id) DESC NULLS LAST)""";
 
         List<Film> films = findMany(sql, userId, friendId);
         films.forEach(this::loadFilmGenres);
