@@ -1,12 +1,13 @@
+DROP TABLE IF EXISTS film_genres;
+DROP TABLE IF EXISTS film_likes;
+DROP TABLE IF EXISTS film_directors;
+DROP TABLE IF EXISTS films;
+DROP TABLE IF EXISTS friendships;
+DROP TABLE IF EXISTS friend_requests;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS mpa;
 DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS directors;
-DROP TABLE IF EXISTS films;
-DROP TABLE IF EXISTS film_genres;
-DROP TABLE IF EXISTS film_likes;
-DROP TABLE IF EXISTS friendships;
-DROP TABLE IF EXISTS friend_requests;
 
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -38,8 +39,13 @@ CREATE TABLE IF NOT EXISTS films (
     description VARCHAR(200),
     release_date DATE,
     duration BIGINT,
-    mpa_id BIGINT NULL REFERENCES mpa(id),
-    director_id BIGINT NULL REFERENCES directors(id)
+    mpa_id BIGINT NULL REFERENCES mpa(id)
+);
+
+CREATE TABLE IF NOT EXISTS film_directors (
+    film_id BIGINT REFERENCES films(id) ON DELETE CASCADE,
+    director_id BIGINT REFERENCES directors(id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, director_id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genres (

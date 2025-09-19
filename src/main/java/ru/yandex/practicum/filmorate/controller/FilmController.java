@@ -55,7 +55,20 @@ public class FilmController {
     }
 
     @GetMapping("/common")
-    public Collection<Film> getCommonFilms(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId) {
+    public Collection<Film> getCommonFilms(
+            @RequestParam("userId") Long userId,
+            @RequestParam("friendId") Long friendId
+    ) {
         return filmService.getCommonFilms(userId, friendId);
+    }
+
+
+    // GET /films/director/{directorId}?sortBy=[year,likes]
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getSortedFilms(
+            @PathVariable("directorId") Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return filmService.getSortedFilms(directorId, sortBy);
     }
 }

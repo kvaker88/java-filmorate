@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -105,6 +106,18 @@ public class FilmService {
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         log.info("Запрос на получение общих фильмов пользователей {} и {}", userId, friendId);
         return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    public Collection<Film> getSortedFilms(Long directorId, String sortBy) {
+        log.info("Запрос на получение фильмов режиссера {} и сортировкой {}", directorId, sortBy);
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new InternalServerException("Некорректный параметр сортировки. Доступны year или likes");
+        }
+
+        //вариантов два, чтобы потом не анализировать строки - преобразуем в булево
+        boolean sortByYear = sortBy.equals("year");
+
+        return filmStorage.getSortedFilms(directorId, sortByYear);
     }
 
 }
