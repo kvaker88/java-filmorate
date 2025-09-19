@@ -27,18 +27,6 @@ public class MpaRowMapper implements RowMapper<Mpa> {
             mpa.setName(rs.getString("name")); // fallback
         }
 
-        try {
-            String description = rs.getString("mpa_description");
-            if (description != null) {
-                mpa.setDescription(description);
-            } else {
-                mpa.setDescription(rs.getString("description")); // fallback
-            }
-        } catch (SQLException e) {
-            log.warn("Ошибка при получении описания MPA рейтинга из результата запроса", e);
-            mpa.setDescription(null);
-        }
-
         return mpa;
     }
 }
