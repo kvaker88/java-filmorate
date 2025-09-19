@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.ReviewRepository;
 
 import java.util.List;
 
@@ -88,3 +87,4 @@ public class ReviewService {
         repository.recalcUseful(reviewId);
     }
 }
+
