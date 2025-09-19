@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.service.ReviewService;
+import ru.yandex.practicum.filmorate.review.ReviewService;
 
 import java.util.List;
 
