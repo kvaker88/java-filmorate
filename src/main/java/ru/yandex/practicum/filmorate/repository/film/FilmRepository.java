@@ -203,38 +203,18 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         String sql = """
-                        SELECT
-                        	f.*,
-                        	m.id AS mpa_id,
-                        	m.name AS mpa_name
-                        FROM
-                        	films f
-                        JOIN mpa m ON
-                        	f.mpa_id = m.id
-                        WHERE
-                        	f.id IN
-                        (
-                        	SELECT
-                        		films_id.film_id
-                        	FROM
-                        		(
-                        		SELECT
-                        			f1.film_id
-                        		FROM
-                        			film_likes f1
-                        		INNER JOIN film_likes f2
-                                    ON
-                        			f1.film_id = f2.film_id
-                        			WHERE f1.user_id = ?
-                        			AND f2.user_id = ?
-                                ) films_id
-                        	INNER JOIN film_likes f3
-                            ON
-                        		films_id.film_id = f3.film_id
-                        	GROUP BY
-                        		films_id.film_id
-                        	ORDER BY
-                        		COUNT(f3.user_id) DESC NULLS LAST)""";
+        SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        WHERE f.id IN
+            (SELECT films_id.film_id
+             FROM (SELECT f1.film_id
+                   FROM film_likes f1
+                   INNER JOIN film_likes f2 ON f1.film_id = f2.film_id
+                   WHERE f1.user_id = ? AND f2.user_id = ?) films_id
+             INNER JOIN film_likes f3 ON films_id.film_id = f3.film_id
+             GROUP BY films_id.film_id
+             ORDER BY COUNT(f3.user_id) DESC NULLS LAST)""";
 
         List<Film> films = findMany(sql, userId, friendId);
         films.forEach(this::loadFilmGenres);
