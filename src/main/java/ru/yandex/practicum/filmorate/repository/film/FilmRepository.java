@@ -17,24 +17,24 @@ import java.util.*;
 public class FilmRepository extends BaseRepository<Film> implements FilmStorage {
     private static final String FIND_ALL_QUERY =
             "SELECT f.*, " +
-            "m.id as mpa_id, " +
-            "m.name as mpa_name " +
-            "FROM films f " +
-            "JOIN mpa m ON f.mpa_id = m.id";
+                    "m.id as mpa_id, " +
+                    "m.name as mpa_name " +
+                    "FROM films f " +
+                    "JOIN mpa m ON f.mpa_id = m.id";
     private static final String FIND_BY_ID_QUERY =
             "SELECT f.*, " +
-            "m.id as mpa_id, " +
-            "m.name as mpa_name " +
-            "FROM films f " +
-            "JOIN mpa m ON f.mpa_id = m.id " +
-            "WHERE f.id = ?";
+                    "m.id as mpa_id, " +
+                    "m.name as mpa_name " +
+                    "FROM films f " +
+                    "JOIN mpa m ON f.mpa_id = m.id " +
+                    "WHERE f.id = ?";
     private static final String INSERT_QUERY =
             "INSERT INTO films " +
-            "(name, description, release_date, duration, mpa_id) " +
-            "VALUES (?, ?, ?, ?, ?)";
+                    "(name, description, release_date, duration, mpa_id) " +
+                    "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY =
             "UPDATE films " +
-            "SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
+                    "SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
     private static final String EXISTS_QUERY = "SELECT COUNT(*) FROM films WHERE id = ?";
 
@@ -167,17 +167,17 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     public Collection<Film> getPopularFilms(int count) {
         String sql = """
-        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
-        FROM films f
-        JOIN mpa m ON f.mpa_id = m.id
-        LEFT JOIN (
-            SELECT film_id, COUNT(user_id) as likes_count
-            FROM film_likes
-            GROUP BY film_id
-        ) l ON f.id = l.film_id
-        ORDER BY l.likes_count DESC NULLS LAST, f.id ASC
-        LIMIT ?
-    """;
+                    SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+                    FROM films f
+                    JOIN mpa m ON f.mpa_id = m.id
+                    LEFT JOIN (
+                        SELECT film_id, COUNT(user_id) as likes_count
+                        FROM film_likes
+                        GROUP BY film_id
+                    ) l ON f.id = l.film_id
+                    ORDER BY l.likes_count DESC NULLS LAST, f.id ASC
+                    LIMIT ?
+                """;
 
         List<Film> films = findMany(sql, count);
         films.forEach(this::loadFilmGenres);
@@ -283,6 +283,27 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         List<Film> films = findMany(sql, filmIds.toArray());
         films.forEach(this::loadFilmGenres);
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = """
+        SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        WHERE f.id IN
+            (SELECT films_id.film_id
+             FROM (SELECT f1.film_id
+                   FROM film_likes f1
+                   INNER JOIN film_likes f2 ON f1.film_id = f2.film_id
+                   WHERE f1.user_id = ? AND f2.user_id = ?) films_id
+             INNER JOIN film_likes f3 ON films_id.film_id = f3.film_id
+             GROUP BY films_id.film_id
+             ORDER BY COUNT(f3.user_id) DESC NULLS LAST)""";
+
+        List<Film> films = findMany(sql, userId, friendId);
+        films.forEach(this::loadFilmGenres);
+
+
         return films;
     }
 }

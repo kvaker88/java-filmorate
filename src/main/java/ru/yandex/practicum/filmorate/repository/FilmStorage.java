@@ -37,4 +37,6 @@ public interface FilmStorage {
     int getCommonLikesCount(Long userId1, Long userId2);
 
     List<Film> getFilmsByIds(List<Long> filmIds);
+  
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
 }
