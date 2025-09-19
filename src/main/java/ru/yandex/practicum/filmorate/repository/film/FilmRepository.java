@@ -10,10 +10,7 @@ import ru.yandex.practicum.filmorate.repository.BaseRepository;
 import ru.yandex.practicum.filmorate.repository.FilmStorage;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Primary
@@ -187,6 +184,43 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return films;
     }
 
+    public Collection<Film> getPopularFilms(int count, Long genreId, Integer year) {
+        StringBuilder sqlBuilder = new StringBuilder("""
+        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        LEFT JOIN (
+            SELECT film_id, COUNT(user_id) as likes_count
+            FROM film_likes
+            GROUP BY film_id
+        ) l ON f.id = l.film_id
+        """);
+        List<Object> params = new ArrayList<>();
+        List<String> whereConditions = new ArrayList<>();
+
+        if (genreId != null) {
+            sqlBuilder.append("JOIN film_genres fg ON f.id = fg.film_id ");
+            whereConditions.add("fg.genre_id = ?");
+            params.add(genreId);
+        }
+
+        if (year != null) {
+            whereConditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            params.add(year);
+        }
+
+        if (!whereConditions.isEmpty()) {
+            sqlBuilder.append("WHERE ").append(String.join(" AND ", whereConditions)).append(" ");
+        }
+
+        sqlBuilder.append("ORDER BY l.likes_count DESC NULLS LAST, f.id ASC LIMIT ?");
+        params.add(count);
+
+        List<Film> films = findMany(sqlBuilder.toString(), params.toArray());
+        films.forEach(this::loadFilmGenres);
+        return films;
+    }
+
     @Override
     public boolean isLikeExists(Long filmId, Long userId) {
         String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
@@ -198,5 +232,57 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
         Integer count = jdbc.queryForObject(sql, Integer.class, filmId);
         return count != null ? count : 0;
+    }
+
+    public List<Long> getUserLikedFilmIds(Long userId) {
+        String sql = "SELECT film_id FROM film_likes WHERE user_id = ?";
+        return jdbc.query(sql, (rs, rowNum) -> rs.getLong("film_id"), userId);
+    }
+
+    public List<Long> getUsersWhoLikedFilm(Long filmId) {
+        String sql = "SELECT user_id FROM film_likes WHERE film_id = ?";
+        return jdbc.query(sql, (rs, rowNum) -> rs.getLong("user_id"), filmId);
+    }
+
+    public Map<Long, Set<Long>> getAllUserLikes() {
+        String sql = "SELECT user_id, film_id FROM film_likes ORDER BY user_id";
+        Map<Long, Set<Long>> userLikes = new HashMap<>();
+
+        jdbc.query(sql, rs -> {
+            Long userId = rs.getLong("user_id");
+            Long filmId = rs.getLong("film_id");
+
+            userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+
+        return userLikes;
+    }
+
+    public int getCommonLikesCount(Long userId1, Long userId2) {
+        String sql = """
+        SELECT COUNT(*) FROM film_likes fl1 
+        JOIN film_likes fl2 ON fl1.film_id = fl2.film_id 
+        WHERE fl1.user_id = ? AND fl2.user_id = ?
+        """;
+        Integer count = jdbc.queryForObject(sql, Integer.class, userId1, userId2);
+        return count != null ? count : 0;
+    }
+
+    public List<Film> getFilmsByIds(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format("""
+        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        WHERE f.id IN (%s)
+        """, placeholders);
+
+        List<Film> films = findMany(sql, filmIds.toArray());
+        films.forEach(this::loadFilmGenres);
+        return films;
     }
 }

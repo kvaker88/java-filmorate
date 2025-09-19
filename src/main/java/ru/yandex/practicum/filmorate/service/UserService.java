@@ -2,21 +2,24 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.UserStorage;
 import ru.yandex.practicum.filmorate.validation.FriendshipValidator;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
-
 import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    @Autowired
+    private final RecommendationService recommendationService;
     private final UserStorage userStorage;
 
     public List<User> getAllUsers() {
@@ -103,6 +106,16 @@ public class UserService {
         FriendshipValidator.validate(userId, otherId, userStorage);
 
         return userStorage.getCommonFriends(userId, otherId);
+    }
+
+    public List<Film> getRecommendations(Long userId) {
+        log.info("Запрос рекомендаций для пользователя {}", userId);
+
+        if (userStorage.doesUserNotExist(userId)) {
+            throw new NotFoundException(String.format("Пользователь с ID %d не найден", userId));
+        }
+
+        return recommendationService.getRecommendations(userId);
     }
 }
 

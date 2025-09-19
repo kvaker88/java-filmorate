@@ -98,6 +98,11 @@ public class FilmService {
         return filmStorage.getPopularFilms(limit);
     }
 
+    public Collection<Film> getPopularFilms(int count, Long genreId, Integer year) {
+        int limit = count > 0 ? count : 10;
+        return filmStorage.getPopularFilms(limit, genreId, year);
+    }
+
     public boolean isLikeExists(Long filmId, Long userId) {
         return filmStorage.isLikeExists(filmId, userId);
     }

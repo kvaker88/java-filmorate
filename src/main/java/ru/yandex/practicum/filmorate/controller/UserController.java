@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -56,6 +58,12 @@ public class UserController {
     ) {
         User response = userService.addFriend(userId, friendId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/recommendations")
+    public List<Film> getRecommendations(@PathVariable Long userId) {
+        log.info("GET /users/{}/recommendations", userId);
+        return userService.getRecommendations(userId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
