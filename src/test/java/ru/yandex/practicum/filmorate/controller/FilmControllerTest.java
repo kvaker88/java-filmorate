@@ -177,7 +177,7 @@ class FilmControllerTest {
         filmController.likeTheFilm(film2.getId(), user2.getId());
         filmController.likeTheFilm(testFilm.getId(), validUser.getId());
 
-        Collection<Film> popularFilms = filmController.getPopularFilms(2, null, null);
+        Collection<Film> popularFilms = filmController.getPopularFilms(2);
 
         assertEquals(2, popularFilms.size());
         assertEquals(film2.getId(), popularFilms.iterator().next().getId());
