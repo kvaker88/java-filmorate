@@ -192,6 +192,43 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return films;
     }
 
+    public Collection<Film> getPopularFilms(int count, Long genreId, Integer year) {
+        StringBuilder sqlBuilder = new StringBuilder("""
+        SELECT f.*, m.id as mpa_id, m.name as mpa_name, m.description as mpa_description
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        LEFT JOIN (
+            SELECT film_id, COUNT(user_id) as likes_count
+            FROM film_likes
+            GROUP BY film_id
+        ) l ON f.id = l.film_id
+        """);
+        List<Object> params = new ArrayList<>();
+        List<String> whereConditions = new ArrayList<>();
+
+        if (genreId != null) {
+            sqlBuilder.append("JOIN film_genres fg ON f.id = fg.film_id ");
+            whereConditions.add("fg.genre_id = ?");
+            params.add(genreId);
+        }
+
+        if (year != null) {
+            whereConditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            params.add(year);
+        }
+
+        if (!whereConditions.isEmpty()) {
+            sqlBuilder.append("WHERE ").append(String.join(" AND ", whereConditions)).append(" ");
+        }
+
+        sqlBuilder.append("ORDER BY l.likes_count DESC NULLS LAST, f.id ASC LIMIT ?");
+        params.add(count);
+
+        List<Film> films = findMany(sqlBuilder.toString(), params.toArray());
+        films.forEach(this::loadFilmGenres);
+        return films;
+    }
+
     @Override
     public boolean isLikeExists(Long filmId, Long userId) {
         String sql = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
@@ -208,17 +245,18 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         String sql = """
-                SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
-                FROM films f
-                JOIN mpa m ON f.mpa_id = m.id
-                WHERE f.id IN (SELECT films_id.film_id
-                               FROM (SELECT f1.film_id
-                                	 FROM film_likes f1
-                                	 INNER JOIN film_likes f2 ON f1.film_id = f2.film_id
-                                	 WHERE f1.user_id = ? AND f2.user_id = ?) films_id
-                                	 INNER JOIN film_likes f3 ON films_id.film_id = f3.film_id
-                                	 GROUP BY films_id.film_id
-                                	 ORDER BY COUNT(f3.user_id) DESC NULLS LAST)""";
+        SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+        FROM films f
+        JOIN mpa m ON f.mpa_id = m.id
+        WHERE f.id IN
+            (SELECT films_id.film_id
+             FROM (SELECT f1.film_id
+                   FROM film_likes f1
+                   INNER JOIN film_likes f2 ON f1.film_id = f2.film_id
+                   WHERE f1.user_id = ? AND f2.user_id = ?) films_id
+             INNER JOIN film_likes f3 ON films_id.film_id = f3.film_id
+             GROUP BY films_id.film_id
+             ORDER BY COUNT(f3.user_id) DESC NULLS LAST)""";
 
         List<Film> films = findMany(sql, userId, friendId);
         films.forEach(this::loadFilmGenres);
