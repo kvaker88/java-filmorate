@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.repository;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface FilmStorage {
     Collection<Film> getAllFilms();
@@ -24,4 +27,14 @@ public interface FilmStorage {
     Collection<Film> getPopularFilms(int count, Long genre, Integer year);
 
     boolean isLikeExists(Long filmId, Long userId);
+
+    List<Long> getUserLikedFilmIds(Long userId);
+
+    List<Long> getUsersWhoLikedFilm(Long filmId);
+
+    Map<Long, Set<Long>> getAllUserLikes();
+
+    int getCommonLikesCount(Long userId1, Long userId2);
+
+    List<Film> getFilmsByIds(List<Long> filmIds);
 }

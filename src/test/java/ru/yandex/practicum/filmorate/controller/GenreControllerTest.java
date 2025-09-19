@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({GenreRepository.class, GenreService.class, GenreController.class, GenreRowMapper.class,
         FilmRepository.class, FilmRowMapper.class, MpaRowMapper.class})
 class GenreControllerTest {
-
     @Autowired
     private GenreController genreController;
 

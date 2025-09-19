@@ -21,6 +21,7 @@ import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.repository.user.UserRepository;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.RecommendationService;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
         FilmService.class, UserService.class, FilmController.class, UserController.class,
-        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
+        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class, RecommendationService.class})
 class FilmRepositoryTest {
 
     @Autowired
