@@ -12,6 +12,7 @@ import java.util.List;
 
 @Service
 public class ReviewService {
+
     private static final int DEFAULT_COUNT = 10;
 
     private final ReviewRepository repository;
@@ -24,7 +25,7 @@ public class ReviewService {
     public Review create(final Review review) {
         try {
             return repository.create(review);
-        } catch (DataIntegrityViolationException e) {
+        } catch (final DataIntegrityViolationException e) {
             // Most likely FK violation for film_id/user_id
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Film or User not found for given IDs");
@@ -73,7 +74,7 @@ public class ReviewService {
         try {
             repository.upsertVote(reviewId, userId, value);
             repository.recalcUseful(reviewId);
-        } catch (DataIntegrityViolationException e) {
+        } catch (final DataIntegrityViolationException e) {
             // FK violation (user or review not found)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review or User not found");
         }

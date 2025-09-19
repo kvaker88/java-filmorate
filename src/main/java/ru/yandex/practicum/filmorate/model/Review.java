@@ -1,11 +1,14 @@
- package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.model;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Objects;
+
 
 public class Review {
 
+    // JSON: reviewId
     private Long reviewId;
 
     @NotBlank
@@ -17,8 +20,10 @@ public class Review {
     @NotNull
     private Long userId;  // author user id
 
+    @NotNull
     private Long filmId;  // film id
 
+    // calculated/useful rating (likes - dislikes). Kept as an integer field in DB.
     private Integer useful = 0;
 
     public Review() {
@@ -85,3 +90,4 @@ public class Review {
         return Objects.hash(reviewId);
     }
 }
+

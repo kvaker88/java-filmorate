@@ -1,17 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-        import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
 @Validated
 public class ReviewController {
+
     private final ReviewService reviewService;
 
     public ReviewController(final ReviewService reviewService) {

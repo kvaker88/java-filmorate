@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Repository
 public class ReviewRepository {
+
     private final JdbcTemplate jdbc;
 
     public ReviewRepository(final JdbcTemplate jdbc) {
@@ -52,10 +53,11 @@ public class ReviewRepository {
 
     public Optional<Review> findById(final Long reviewId) {
         try {
-            final String sql = "SELECT review_id, film_id, user_id, content, is_positive, useful FROM reviews WHERE review_id=?";
+            final String sql = "SELECT review_id, film_id, user_id, content, is_positive, useful " +
+                    "FROM reviews WHERE review_id=?";
             final Review r = jdbc.queryForObject(sql, mapper, reviewId);
             return Optional.ofNullable(r);
-        } catch (EmptyResultDataAccessException e) {
+        } catch (final EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
@@ -82,7 +84,7 @@ public class ReviewRepository {
     }
 
     /**
-     * Insert or update vote (value in {1, -1}). Works on both H2 and Postgres without vendor-specific UPSERT.
+     * Insert or update vote (value in {1, -1}). Portable for H2/Postgres.
      */
     public void upsertVote(final Long reviewId, final Long userId, final int value) {
         final String updateSql = "UPDATE review_votes SET value=? WHERE review_id=? AND user_id=?";
