@@ -19,6 +19,7 @@ public class Film {
     private Long duration;
     private Mpa mpa;
     private Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
 
     public Film(Long id, String name, String description, LocalDate releaseDate, Long duration) {
         this.id = id;

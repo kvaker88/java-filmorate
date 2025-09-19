@@ -22,7 +22,7 @@ public class ErrorHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
-    public ErrorResponse handleValidation(final  ValidationException e) {
+    public ErrorResponse handleValidation(final ValidationException e) {
         return new ErrorResponse(
                 "Ошибка валидации данных",
                 e.getMessage()

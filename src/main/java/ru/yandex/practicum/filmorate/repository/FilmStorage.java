@@ -26,4 +26,6 @@ public interface FilmStorage {
     boolean isLikeExists(Long filmId, Long userId);
 
     Collection<Film> getCommonFilms(Long userId, Long friendId);
+
+    Collection<Film> getSortedFilms(Long directorId, boolean sortByYear);
 }

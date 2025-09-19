@@ -8,18 +8,18 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.controller.DirectorController;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.film.DirectorRepository;
 import ru.yandex.practicum.filmorate.repository.film.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.film.GenreRepository;
 import ru.yandex.practicum.filmorate.repository.film.MpaRepository;
-import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
-import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
-import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
-import ru.yandex.practicum.filmorate.repository.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.repository.mapper.*;
+import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -33,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Import({FilmRepository.class, UserRepository.class, GenreRepository.class, MpaRepository.class,
         FilmService.class, UserService.class, FilmController.class, UserController.class,
-        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class})
+        FilmRowMapper.class, UserRowMapper.class, MpaRowMapper.class, GenreRowMapper.class,
+        DirectorRepository.class, DirectorController.class, DirectorService.class, DirectorRowMapper.class})
 class UserRepositoryTest {
 
     @Autowired

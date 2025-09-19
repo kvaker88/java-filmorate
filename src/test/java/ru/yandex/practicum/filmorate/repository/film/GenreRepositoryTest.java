@@ -11,6 +11,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.controller.GenreController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.repository.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Import({GenreRepository.class, GenreService.class, GenreController.class, GenreRowMapper.class,
-        FilmRepository.class, FilmRowMapper.class, MpaRowMapper.class})
+        FilmRepository.class, FilmRowMapper.class, MpaRowMapper.class,
+        DirectorRepository.class, DirectorRowMapper.class})
 class GenreRepositoryTest {
 
     @Autowired

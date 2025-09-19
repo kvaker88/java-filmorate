@@ -39,19 +39,23 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String EXISTS_QUERY = "SELECT COUNT(*) FROM films WHERE id = ?";
 
     private final GenreRepository genreRepository;
+    private final DirectorRepository directorRepository;
 
     public FilmRepository(JdbcTemplate jdbc,
                           FilmRowMapper filmRowMapper,
-                          GenreRepository genreRepository
+                          GenreRepository genreRepository,
+                          DirectorRepository directorRepository
     ) {
         super(jdbc, filmRowMapper);
         this.genreRepository = genreRepository;
+        this.directorRepository = directorRepository;
     }
 
     @Override
     public Collection<Film> getAllFilms() {
         List<Film> films = findMany(FIND_ALL_QUERY);
         films.forEach(this::loadFilmGenres);
+        films.forEach(this::loadFilmDirectors);
         return films;
     }
 
@@ -60,6 +64,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         Film film = findOne(FIND_BY_ID_QUERY, filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с ID " + filmId + " не найден"));
         loadFilmGenres(film);
+        loadFilmDirectors(film);
         return film;
     }
 
@@ -85,6 +90,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             saveFilmGenres(film);
         }
+
+        saveFilmDirectors(film);
     }
 
     private void validateMpaExists(Long mpaId) {
@@ -140,6 +147,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 mpaId,
                 film.getId());
         updateFilmGenres(film);
+        updateFilmDirectors(film);
     }
 
     @Override
@@ -254,5 +262,57 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         films.forEach(this::loadFilmGenres);
 
         return films;
+    }
+
+    private void saveFilmDirectors(Film film) {
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            directorRepository.addDirectorsToFilm(film.getId(), film.getDirectors());
+        }
+    }
+
+    @Override
+    public Collection<Film> getSortedFilms(Long directorId, boolean sortByYear) {
+
+        String sql;
+        if (sortByYear) {
+            sql = """
+                    SELECT f.*, m.id as mpa_id, m.name as mpa_name
+                    FROM films f
+                    JOIN mpa m ON f.mpa_id = m.id
+                    WHERE f.id IN (SELECT fd.film_id
+                                   FROM film_directors fd
+                                   WHERE fd.director_id =?)
+                    ORDER BY release_date ASC NULLS LAST""";
+        } else {
+            sql = """
+                    SELECT f.*, m.id as mpa_id, m.name as mpa_name
+                    FROM films f
+                    JOIN mpa m ON f.mpa_id = m.id
+                    LEFT JOIN (SELECT COUNT(fl.user_id) AS likes,
+                               fl.film_id
+                               FROM film_likes fl
+                               GROUP BY fl.film_id) AS l ON f.id = l.film_id
+                    WHERE f.id IN (SELECT fd.film_id
+                                   FROM film_directors fd
+                                   WHERE fd.director_id =?)
+                    ORDER BY l.likes DESC NULLS LAST""";
+        }
+
+        List<Film> films = findMany(sql, directorId);
+        films.forEach(this::loadFilmGenres);
+        films.forEach(this::loadFilmDirectors);
+
+        return films;
+    }
+
+    private void loadFilmDirectors(Film film) {
+        if (film != null) {
+            film.setDirectors(new HashSet<>(directorRepository.findDirectorsByFilmId(film.getId())));
+        }
+    }
+
+    private void updateFilmDirectors(Film film) {
+        directorRepository.removeAllDirectorsFromFilm(film.getId());
+        saveFilmDirectors(film);
     }
 }
