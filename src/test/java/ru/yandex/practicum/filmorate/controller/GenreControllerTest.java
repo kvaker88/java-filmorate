@@ -16,7 +16,6 @@ import ru.yandex.practicum.filmorate.repository.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
-import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
 import java.util.Collection;

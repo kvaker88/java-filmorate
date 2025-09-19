@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.yandex.practicum.filmorate.controller.DirectorController;
 import ru.yandex.practicum.filmorate.controller.GenreController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -16,7 +15,6 @@ import ru.yandex.practicum.filmorate.repository.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.GenreRowMapper;
 import ru.yandex.practicum.filmorate.repository.mapper.MpaRowMapper;
-import ru.yandex.practicum.filmorate.service.DirectorService;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
 import java.time.LocalDate;
