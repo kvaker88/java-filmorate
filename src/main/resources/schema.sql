@@ -49,3 +49,25 @@ CREATE TABLE IF NOT EXISTS friend_requests (
     receiver_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (sender_id, receiver_id)
 );
+
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id   BIGSERIAL PRIMARY KEY,
+    film_id     BIGINT     NOT NULL,
+    user_id     BIGINT     NOT NULL,
+    content     TEXT       NOT NULL,
+    is_positive BOOLEAN    NOT NULL,
+    useful      INT        NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMP  NOT NULL DEFAULT NOW()
+);
+
+
+CREATE TABLE IF NOT EXISTS review_votes (
+    review_id BIGINT    NOT NULL,
+    user_id   BIGINT    NOT NULL,
+    value     SMALLINT  NOT NULL,
+    CONSTRAINT ck_review_votes_value CHECK (value IN (-1, 1)),
+    CONSTRAINT pk_review_votes PRIMARY KEY (review_id, user_id),
+    CONSTRAINT fk_review_votes_review FOREIGN KEY (review_id) REFERENCES reviews (review_id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_votes_user   FOREIGN KEY (user_id)   REFERENCES users (user_id)   ON DELETE CASCADE
+);
