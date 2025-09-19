@@ -69,3 +69,4 @@ public class ReviewController {
         reviewService.removeVote(reviewId, userId);
     }
 }
+

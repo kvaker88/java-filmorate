@@ -15,9 +15,9 @@ public class ReviewService {
 
     private static final int DEFAULT_COUNT = 10;
 
-    private final ReviewRepository repository;
+    private final ru.yandex.practicum.filmorate.service.ReviewRepository repository;
 
-    public ReviewService(final ReviewRepository repository) {
+    public ReviewService(final ru.yandex.practicum.filmorate.service.ReviewRepository repository) {
         this.repository = repository;
     }
 

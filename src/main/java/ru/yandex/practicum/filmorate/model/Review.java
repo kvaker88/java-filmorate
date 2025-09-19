@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
-
+/**
+ * Review model with exact JSON field names from the task.
+ */
 public class Review {
 
     // JSON: reviewId
